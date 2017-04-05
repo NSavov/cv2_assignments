@@ -3,7 +3,7 @@
 
 sampling_techniques = ['all_points', 'uniform_sampling', 'random_sampling', 'informed_sampling'];
 sampling_technique = 'all_points';
-threshold = inf;
+threshold = 0;
 % for technique = techniques
     temp = load('source.mat');
     Source_pc = temp.source;

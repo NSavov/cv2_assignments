@@ -3,7 +3,9 @@ function [ T ] = icp_algorithm( Source_pc, Target_pc, sampling_technique, thresh
 %
     % step 1 
     % initializing variables
-    n_dims = size(Source_pc, 2);
+    Source_pc(size(Source_pc,1)+1,:) = 1;
+    Target_pc(size(Target_pc,1)+1,:) = 1;
+    n_dims = size(Source_pc, 1);
     R = eye(n_dims);
     t = zeros([n_dims,1]);
     is_error_decreasing_above_threshold = true;
@@ -20,12 +22,12 @@ function [ T ] = icp_algorithm( Source_pc, Target_pc, sampling_technique, thresh
         [R, t] = get_rotation_and_translation_matrix(U, V, Source_pc, Target_pc);
         
         % step 4
-        current_error = get_rms_error(Source_pc, Target_pc, R, t);
+        current_error = get_rms_error(Source_pc, R, t);
         if (current_error > prev_error - threshold)
             is_error_decreasing_above_threshold = false; 
         else
-            prev_error = current_error;
-        end
+             prev_error = current_error;
+         end
     end
 end
 
