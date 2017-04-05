@@ -1,22 +1,26 @@
-function [ A ] = icp_algorithm( sampling_technique, threshold)
+function [ T ] = icp_algorithm( Source_pc, Target_pc, sampling_technique, threshold)
 %UNTITLED Summary of this function goes here
 %
-    % initialize R (identiy matrix), t
-    % step 1
-    R = eye(3);
-    t = zeros([3,1]);
-
+    % step 1 
+    % initializing variables
+    n_dims = size(Source_pc, 2);
+    R = eye(n_dims);
+    t = zeros([n_dims,1]);
     is_error_decreasing_above_threshold = true;
     prev_error = inf; 
+    
+    % icp algorithm
     while is_error_decreasing_above_threshold
         % step 2
-        A = find_closest_point_to_target(A_base_pc, A_target_pc, sampling_technique);
+        Closest_points_pc = get_closest_point_to_target(Source_pc, Target_pc, sampling_technique, R, t);
+        T = get_transformation_matrix(Source_pc, Closest_points_pc);
 
         % step 3
-        [U, S, V] = svd(A);
+        [U, ~, V] = svd(T);
+        [R, t] = get_rotation_and_translation_matrix(U, V, Source_pc, Target_pc);
         
         % step 4
-        current_error = rms(A_base, A_target, U, S, V);
+        current_error = get_rms_error(Source_pc, Target_pc, R, t);
         if (current_error > prev_error - threshold)
             is_error_decreasing_above_threshold = false; 
         else
