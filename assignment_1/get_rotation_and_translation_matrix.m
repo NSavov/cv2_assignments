@@ -4,8 +4,8 @@ function [ R, t ] = get_rotation_and_translation_matrix(U, V, Source_pc, Target_
     R = U*V';
     % assumption that the translation can be calculated by the difference
     % in centre of mass
-    mu_b = mean(mean(Source_pc));
-    mu_t = mean(mean(Target_pc)); 
+    mu_b = mean(Source_pc)';
+    mu_t = mean(Target_pc)'; 
     t = mu_b - R*mu_t;
 end
 
