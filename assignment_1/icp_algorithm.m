@@ -8,25 +8,26 @@ function [ T ] = icp_algorithm(Source_pc, Target_pc, sampling_technique, thresho
     n_dims = size(Source_pc, 1);
     R = eye(n_dims);
     t = zeros([n_dims,1]);
-    is_error_decreasing_above_threshold = true;
-    prev_error = inf; 
     
+    Closest_points_pc = get_closest_point_to_target(Source_pc, Target_pc, sampling_technique, R, t);
+    error_over_time = [get_rms_error(Source_pc, Closest_points_pc, R, t)];
+    is_error_decreasing_above_threshold = true;
+    
+    fig_handle = [];
     % icp algorithm
     while is_error_decreasing_above_threshold
         % step 2
-%         Source_pc = Source_pc * T + t
         Closest_points_pc = get_closest_point_to_target(Source_pc, Target_pc, sampling_technique, R, t);
+        
+        % step 3
         [R, t] = get_rotation_and_translation_matrix(Source_pc, Closest_points_pc);
         
         % step 4
-        current_error = get_rms_error(Source_pc, Closest_points_pc, R, t);
-        current_error
-%         if (current_error > prev_error - threshold)
-%             is_error_decreasing_above_threshold = false; 
-%         else
-             prev_error = current_error;
-%          end
-pause
+        error_over_time = [error_over_time, get_rms_error(Source_pc, Closest_points_pc, R, t)];
+        if (error_over_time(end) > (error_over_time(end-1) - threshold))
+            is_error_decreasing_above_threshold = false;
+            fig_handle = our_regression_plot(fig_handle, error_over_time);
+        end
     end
 end
 

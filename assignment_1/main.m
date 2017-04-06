@@ -1,5 +1,7 @@
 %   method checks the accuracy, speed, stability, tolerance to noise by
 %   selecting the point selecting technique.
+global param_is_plotting; param_is_plotting = true;
+
 
 sampling_techniques = ['all_points', 'uniform_sampling', 'random_sampling', 'informed_sampling'];
 sampling_technique = 'all_points';
