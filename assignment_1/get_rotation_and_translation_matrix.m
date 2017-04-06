@@ -1,11 +1,17 @@
-function [ R, t ] = get_rotation_and_translation_matrix(U, V, Source_pc, Target_pc)
+function [ R, t ] = get_rotation_and_translation_matrix(Source_pc, Target_pc)
 %GET_ROTATION_AND_TRANSLATION_MATRIX Summary of this function goes here
 %   Detailed explanation goes here
-    R = U*V';
     % assumption that the translation can be calculated by the difference
     % in centre of mass
-    mu_b = mean(Source_pc, 2);
+    mu_s = mean(Source_pc, 2);
     mu_t = mean(Target_pc, 2); 
-    t = mu_b - R*mu_t;
+    Source_pc = Source_pc - mu_s;
+    Target_pc = Target_pc - mu_t;
+    S = Source_pc * Target_pc';
+    [U,~,V] = svd(S);
+    Something_else = eye(size(V,2));
+    Something_else(end, end) = det(V*U');
+    R = V*Something_else*U';
+    t = mu_t - R*mu_s;
 end
 

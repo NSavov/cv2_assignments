@@ -1,4 +1,4 @@
-function [ T ] = icp_algorithm( Source_pc, Target_pc, sampling_technique, threshold)
+function [ T ] = icp_algorithm(Source_pc, Target_pc, sampling_technique, threshold)
 %UNTITLED Summary of this function goes here
 %
     % step 1 
@@ -15,14 +15,11 @@ function [ T ] = icp_algorithm( Source_pc, Target_pc, sampling_technique, thresh
     while is_error_decreasing_above_threshold
         % step 2
         Closest_points_pc = get_closest_point_to_target(Source_pc, Target_pc, sampling_technique, R, t);
-        T = get_transformation_matrix(Source_pc, Closest_points_pc);
-
-        % step 3
-        [U, ~, V] = svd(T);
-        [R, t] = get_rotation_and_translation_matrix(U, V, Source_pc, Target_pc);
+        [R, t] = get_rotation_and_translation_matrix(Source_pc, Closest_points_pc);
         
         % step 4
         current_error = get_rms_error(Source_pc, R, t);
+        current_error
         if (current_error > prev_error - threshold)
             is_error_decreasing_above_threshold = false; 
         else
