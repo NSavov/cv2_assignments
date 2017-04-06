@@ -14,17 +14,19 @@ function [ T ] = icp_algorithm(Source_pc, Target_pc, sampling_technique, thresho
     % icp algorithm
     while is_error_decreasing_above_threshold
         % step 2
+%         Source_pc = Source_pc * T + t
         Closest_points_pc = get_closest_point_to_target(Source_pc, Target_pc, sampling_technique, R, t);
         [R, t] = get_rotation_and_translation_matrix(Source_pc, Closest_points_pc);
         
         % step 4
-        current_error = get_rms_error(Source_pc, R, t);
+        current_error = get_rms_error(Source_pc, Closest_points_pc, R, t);
         current_error
-        if (current_error > prev_error - threshold)
-            is_error_decreasing_above_threshold = false; 
-        else
+%         if (current_error > prev_error - threshold)
+%             is_error_decreasing_above_threshold = false; 
+%         else
              prev_error = current_error;
-         end
+%          end
+pause
     end
 end
 
