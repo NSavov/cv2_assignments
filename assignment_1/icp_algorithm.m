@@ -26,7 +26,7 @@ function [ T ] = icp_algorithm(Source_pc, Target_pc, sampling_technique, thresho
         error_over_time = [error_over_time, get_rms_error(Source_pc, Closest_points_pc, R, t)];
         if (error_over_time(end) > (error_over_time(end-1) - threshold))
             is_error_decreasing_above_threshold = false;
-            fig_handle = our_regression_plot(fig_handle, error_over_time);
+            %fig_handle = our_regression_plot(fig_handle, error_over_time);
         end
     end
 end
