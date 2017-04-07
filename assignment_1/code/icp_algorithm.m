@@ -1,4 +1,4 @@
-function [ R, t ] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique)
+function [ R, t ] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size)
 %UNTITLED Summary of this function goes here
 %   
     iter = 0;

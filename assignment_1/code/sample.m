@@ -3,14 +3,14 @@ function [ Sampled_data ] = sample(Data, sampling_technique, sample_size )
 %   Detailed explanation goes here
 
     switch sampling_technique
-        case 'all_points'
+        case 'allpoints'
             Sampled_data = Data;
             
-        case 'uniform_sampling' 
+        case 'uniform' 
             step = size(Data, 2)/sample_size;
             Sampled_data = Data(:, 1:step:end);
             
-        case 'random_sampling'
+        case 'random'
             Sampled_data = datasample(Data,sample_size, 2, 'Replace', false);
             
 %         case 'informed_sampling'
