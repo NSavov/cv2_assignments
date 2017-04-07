@@ -4,7 +4,7 @@ addpath plotting_code
 addpath code
 global param_is_plotting; param_is_plotting = true;
 
-sampling_techniques = {'allpoints', 'uniform', 'random', 'informed'};
+sampling_techniques = ('allpoints', 'uniform', 'random', 'informed');
 sampling_technique = 'allpoints';
 sample_size = 3200;
 threshold = 0.0001;
@@ -14,5 +14,5 @@ threshold = 0.0001;
     temp = load('target.mat');
     Target_pc = temp.target;
 
-    icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size)
+    icp_algorithm(Source_pca, Target_pca, thresholda, sampling_techniquea, sample_size)
 % end
