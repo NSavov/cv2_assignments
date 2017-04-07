@@ -37,7 +37,7 @@ function [ T ] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_techniq
             is_error_decreasing_above_threshold = false;
             %fig_handle = our_regression_plot(fig_handle, error_over_time);
         end
-
+        iter = iter + 1;
     end
     
     transformed_source = R*Source_pc + t;
