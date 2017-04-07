@@ -5,8 +5,8 @@ function [ R, t ] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_tech
     our_plot3d(Source_pc, Target_pc, strcat(sampling_technique, '_iter', iter))
     % step 1 
     % initializing variables
-    Source_pc(size(Source_pc,1)+1,:) = 1;
-    Target_pc(size(Target_pc,1)+1,:) = 1;
+    Source_pc(end+1,:) = 1;
+    Target_pc(end+1,:) = 1;
     n_dims = size(Source_pc, 1);
     R = eye(n_dims);
     t = zeros([n_dims,1]);
