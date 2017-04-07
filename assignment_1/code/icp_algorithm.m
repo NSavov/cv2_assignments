@@ -2,7 +2,7 @@ function [ R, t ] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_tech
 %UNTITLED Summary of this function goes here
 %   
     iter = 0;
-    our_plot3d(Source_pc, Target_pc, strcat(sampling_technique, '_iter', iter))
+    plot3d_pointcloud(Source_pc, Target_pc, strcat('icp_pointcloud_', sampling_technique, '_iter', int2str(iter)))
     % step 1 
     % initializing variables
     Source_pc(end+1,:) = 1;
@@ -12,11 +12,11 @@ function [ R, t ] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_tech
     t = zeros([n_dims,1]);
     
     Closest_points_pc = get_closest_point_to_target(Source_pc, Target_pc, sampling_technique, R, t);
-    error_over_time = get_rms_error(Source_pc, Closest_points_pc, R, t);
+    errors = get_rms_error(Source_pc, Closest_points_pc, R, t);
     iter = iter + 1;
     is_error_decreasing_above_threshold = true;
     
-    fig_handle_error = [];
+    fig = [];
     % icp algorithm
     while is_error_decreasing_above_threshold
         % step 2
@@ -26,14 +26,16 @@ function [ R, t ] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_tech
         [R, t] = get_rotation_and_translation_matrix(Source_pc, Closest_points_pc);
         
         % step 4
-        error_over_time = [error_over_time, get_rms_error(Source_pc, Closest_points_pc, R, t)];
-        fig_handle_error = plot_error(fig_handle_error, error_over_time);
-        if (error_over_time(end) + threshold >= error_over_time(end-1))
+        errors = [errors, get_rms_error(Source_pc, Closest_points_pc, R, t)];
+        [fig] = plot_error(errors, fig);
+        if (errors(end) + threshold >= errors(end-1))
             is_error_decreasing_above_threshold = false;
         end
         iter = iter + 1;
     end
     transformed_source = R*Source_pc + t;
-    our_plot3d(transformed_source, Target_pc, strcat(sampling_technique, '_iter', iter))
+    plot_error(errors, fig, strcat('icp_error_', sampling_technique, '_iter', int2str(iter)));
+    plot3d_pointcloud(transformed_source, Target_pc, strcat('icp_pointcloud_', sampling_technique, '_iter', int2str(iter)))
+    close all;
 end
 

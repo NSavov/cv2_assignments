@@ -14,5 +14,5 @@ threshold = 0.0001;
     Source_pc = temp.source;
     temp = load('target.mat');
     Target_pc = temp.target;
-    icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size)
+    icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique);
 % end
