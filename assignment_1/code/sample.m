@@ -1,4 +1,4 @@
-function [ Sampled_data ] = sample(Data, sampling_technique, sample_size )
+function [ Sampled_data ] = sample(Data, sampling_technique, sample_size)
 %SAMPLE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -32,9 +32,8 @@ function [ Sampled_data ] = sample(Data, sampling_technique, sample_size )
             
         case 'random'
             Sampled_data = datasample(Data,sample_size, 2, 'Replace', false);
-%         case 'informed_sampling'
-            %WTF do I do here
-            normals = pcnormals(ptCloud);
+        case 'informed'
+            Sampled_data = get_informed_sample(Data, sample_size);
     end
 
 end

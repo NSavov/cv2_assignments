@@ -16,7 +16,8 @@ function [fig] = plot_error(x, fig, f_name)
         end
         if ~isempty(f_name)
            saveas(fig(2), strcat('plots/', f_name))
-           print(fig(2), '-dpdf', strcat('plots/', f_name, '.pdf'))
+           print(fig(2), '-dpdf', strcat('plots/', f_name, '_error', num2str(round(x(end), 3))))
+           x(end)
         end
     end
 end

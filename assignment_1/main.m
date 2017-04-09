@@ -5,9 +5,9 @@ addpath code
 global param_is_plotting; param_is_plotting = true;
 
 sampling_techniques = {'allpoints', 'uniform', 'random', 'informed'};
-sampling_technique = 'allpoints';
-sample_size = 3200;
-threshold = 0.0001;
+sampling_technique = 'informed';
+sample_size = 3000;
+threshold = 0.0;
 % for technique = techniques
     temp = load('source.mat');
     Source_pc = temp.source;
