@@ -5,8 +5,9 @@ function [fig] = plot_error(x, fig, f_name)
     if param_is_plotting
         if isempty(fig)
            fig(2) = figure;
-           fig(1) = plot(x); 
+           fig(1) = plot(x);
         end
+        disp(fig)
         set(fig(1), 'XData', 1:length(x));
         set(fig(1), 'YData', x);
         refreshdata;

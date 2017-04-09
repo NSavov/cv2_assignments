@@ -23,6 +23,6 @@ function [ sample ] = get_informed_sample( data, size )
     [~, I] = sort(Ap, 'descend');
     I = I(1:size);
     sample = data(:, I);
-    scatter3(sample(1,:), sample(2,:), sample(3,:))
+%     scatter3(sample(1,:), sample(2,:), sample(3,:))
 end
 
