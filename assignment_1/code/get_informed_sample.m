@@ -1,4 +1,4 @@
-function [ sample ] = get_informed_sample( data, size )
+function [ sample ] = get_informed_sample( data, sample_size )
 %INFORMED_SAMPLING Summary of this function goes here
 %   Detailed explanation goes here
 %     x = data(1, :);
@@ -20,8 +20,9 @@ function [ sample ] = get_informed_sample( data, size )
     z = data([1,2], :);
     [~, ~, k1, k2] = surfature(x',y',z');
     Ap = (abs(1./k1) + abs(1./k2)) ./ 2;
-    [~, I] = sort(Ap, 'descend');
-    I = I(1:size);
+    [~, I] = sort(Ap, 'ascend');
+    size(k1)
+    I = I(1:sample_size);
     sample = data(:, I);
 %     scatter3(sample(1,:), sample(2,:), sample(3,:))
 end

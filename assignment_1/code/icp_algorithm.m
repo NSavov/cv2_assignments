@@ -1,12 +1,11 @@
-function [ T ] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size)
+function [ transformed_source, R, t ] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size)
 %UNTITLED Summary of this function goes here
 %   
     iter = 0;
     plot3d_pointcloud(Source_pc, Target_pc, strcat('icp_pointcloud_', sampling_technique, '_iter', int2str(iter)))
     % step 1 
     % initializing variables
-    Source_pc(end+1,:) = 1;
-    Target_pc(end+1,:) = 1;
+
     n_dims = size(Source_pc, 1);
     R = eye(n_dims);
     t = zeros([n_dims,1]);

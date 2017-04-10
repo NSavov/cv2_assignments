@@ -6,7 +6,10 @@ function [ Sampled_data ] = sample(Data, sampling_technique, sample_size)
         case 'allpoints'
             Sampled_data = Data;
         case 'uniform' 
-            Sampled_data = get_uniform_sample(Data, sample_size);
+            pc = pointCloud(Data(1:end-1, :)');
+            pc_sampled = pcdownsample(pc,'gridAverage',sample_size);
+            Sampled_data = pc_sampled.Location';
+            Sampled_data(end+1, :) = 1;
             %use this for visualization:
             %pcshow(pointCloud(Sampled_data'));
             
