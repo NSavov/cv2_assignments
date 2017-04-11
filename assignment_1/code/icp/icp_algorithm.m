@@ -4,8 +4,6 @@ function [ transformed_source, R, t, errors ] = icp_algorithm(Source_pc, Target_
     iter = 0;
     plot3d_pointcloud(Source_pc, Target_pc, strcat('icp_pointcloud_', sampling_technique, '_iter', int2str(iter)));
     % step 1 
-    Source_pc(end+1,:) = 1;
-    Target_pc(end+1,:) = 1;
     n_dims = size(Source_pc, 1);
     R = eye(n_dims);
     t = zeros([n_dims,1]);
