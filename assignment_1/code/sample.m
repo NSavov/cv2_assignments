@@ -10,11 +10,7 @@ function [ Sampled_data ] = sample(Data, sampling_technique, sample_size)
             pc_sampled = pcdownsample(pc,'gridAverage',sample_size);
             Sampled_data = pc_sampled.Location';
             Sampled_data(end+1, :) = 1;
-            %use this for visualization:
             %pcshow(pointCloud(Sampled_data'));
-            
-            %old way:
-%             Sampled_data = Data(:, 1:step:end);
         case 'random'
             Sampled_data = datasample(Data,sample_size, 2, 'Replace', false);
         case 'informed'

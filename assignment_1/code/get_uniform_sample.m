@@ -1,4 +1,4 @@
-function [ output_args ] = get_uniform_sample(sample_size)
+function [ Sampled_data ] = get_uniform_sample(sample_size)
 %UNIFORM Summary of this function goes here
 %   Detailed explanation goes here
     step = size(Data, 2)/sample_size;
@@ -17,6 +17,5 @@ function [ output_args ] = get_uniform_sample(sample_size)
     end
 
     Sampled_data = sample(Sampled_data, 'random', sample_size);
-
 end
 
