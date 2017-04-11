@@ -24,7 +24,7 @@ function [ pointCloud ] = merge( pc, frame )
 
     pointCloud = [pc frame];
     points_for_sampling = reshape(pointCloud(pointCloud(1:end-1,:)>min_p && pointCloud(1:end-1,:)<max_p), [size(pointCloud, 1), size(pointCloud, 2)] );
-    sampled = sample(points_for_sampling, 'uniform', 0.01);
+    sampled = sample(points_for_sampling, 'uniform-spatial', 0.01);
     
     %construct the cloud from the non-sampled and sampled parts - sampled +
     %the rest
