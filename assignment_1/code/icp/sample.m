@@ -1,12 +1,12 @@
 function [ Sampled_data ] = sample(Data, sampling_technique, sample_size)
 %SAMPLE Summary of this function goes here
 %   Detailed explanation goes here
-
+    sampling_technique
     switch sampling_technique
         case 'allpoints'
             Sampled_data = Data;
         case 'uniform' 
-            pc = pointCloud(Data(1:end-1, :)');
+            pc = pointCloud(Data(1:3, :)');
             pc_sampled = pcdownsample(pc,'gridAverage',sample_size);
             Sampled_data = pc_sampled.Location';
             Sampled_data(end+1, :) = 1;
