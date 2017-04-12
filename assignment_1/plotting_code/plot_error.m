@@ -2,11 +2,10 @@ function [fig] = plot_error(x, fig, f_name)
 %OUR_PLOT Summary of this function goes here
 %   Detailed explanation goes here
     global param_is_plotting
-    global param_is_testing_accuracy
+    global param_is_testing_stability
     global param_is_timing
     global param_is_testing_tolerance
-    global param_is_testing_stability
-    if param_is_plotting && ~(param_is_timing || param_is_testing_tolerance || param_is_testing_stability || param_is_testing_accuracy)
+    if param_is_plotting && ~(param_is_timing || param_is_testing_tolerance || param_is_testing_stability)
         if isempty(fig)
            fig(2) = figure;
            fig(1) = plot(x);

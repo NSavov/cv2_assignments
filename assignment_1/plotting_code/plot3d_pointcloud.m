@@ -2,11 +2,10 @@ function plot3d_pointcloud(source, target, f_name)
 %OUR_PLOT3D Summary of this function goes here
 %   Detailed explanation goes here
     global param_is_plotting
-    global param_is_testing_accuracy
+    global param_is_testing_stability
     global param_is_timing
     global param_is_testing_tolerance
-    global param_is_testing_stability
-    if param_is_plotting && ~(param_is_timing || param_is_testing_tolerance || param_is_testing_stability || param_is_testing_accuracy)
+    if param_is_plotting && ~(param_is_timing || param_is_testing_tolerance || param_is_testing_stability)
         sa = source(1,:);
         sb = source(2,:);
         sc = source(3,:);

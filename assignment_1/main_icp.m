@@ -4,16 +4,14 @@ addpath plotting_code
 addpath code/icp
 global param_is_plotting; param_is_plotting = true;
 
-global param_is_testing_accuracy; param_is_testing_accuracy = true;
-times_run_accuracy = 3;
-global param_is_timing; param_is_timing = true;
-times_run_timing = 3;
-global param_is_testing_tolerance; param_is_testing_tolerance = true; 
-times_run_tolerance = 3;
 global param_is_testing_stability; param_is_testing_stability = true;
-times_run_stability = 3;
+times_run_stability = 25;
+global param_is_timing; param_is_timing = true;
+times_run_timing = 25;
+global param_is_testing_tolerance; param_is_testing_tolerance = true; 
+times_run_tolerance = 25;
 
-prev_param_is_testing_accuracy = param_is_testing_accuracy; prev_param_is_timing = param_is_timing; prev_param_is_testing_tolerance = param_is_testing_tolerance; prev_param_is_testing_stability = param_is_testing_stability;
+prev_param_is_testing_stability = param_is_testing_stability; prev_param_is_timing = param_is_timing; prev_param_is_testing_tolerance = param_is_testing_tolerance;
 
 delete plots/*.pdf
 delete plots/*.fig
@@ -42,13 +40,13 @@ for sampling_technique = sampling_techniques
     Source_pc(end+1,:) = 1;
     Target_pc(end+1,:) = 1;
     
-    if param_is_testing_accuracy
-        error_matrix = zeros([1, times_run_accuracy]);
-        for x = 1:times_run_accuracy
+    if param_is_testing_stability
+        error_matrix = zeros([1, times_run_stability]);
+        for x = 1:times_run_stability
             [~, ~, ~, errors] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size_iter);
             error_matrix(x) = errors(end);
         end
-        csvwrite(strcat('test_results/accuracy_', sampling_technique, '_iter', int2str(times_run_accuracy), '.csv'), error_matrix)
+        csvwrite(strcat('test_results/stability_', sampling_technique, '_iter', int2str(times_run_stability), '.csv'), error_matrix)
     end
     
     if param_is_timing
@@ -73,20 +71,11 @@ for sampling_technique = sampling_techniques
         end
         csvwrite(strcat('test_results/tolerance_', sampling_technique, '_iter', int2str(times_run_tolerance), '.csv'), error_matrix)
     end
-    
-    if param_is_testing_stability
-        error_matrix = zeros([1, times_run_stability]);
-        for x = 1:times_run_stability
-            [~, ~, ~, errors] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size_iter);
-            error_matrix(x) = errors(end);
-        end
-        csvwrite(strcat('test_results/stability_', sampling_technique, '_iter', int2str(times_run_tolerance), '.csv'), error_matrix)
-    end
        
     % normal run
-    param_is_testing_accuracy = false; param_is_timing = false; param_is_testing_tolerance = false; param_is_testing_stability = false;
+    param_is_testing_stability = false; param_is_timing = false; param_is_testing_tolerance = false;
     icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size_iter);
     
     % restore previous settings
-    param_is_testing_accuracy = prev_param_is_testing_accuracy; param_is_timing = prev_param_is_timing; param_is_testing_tolerance = prev_param_is_testing_tolerance; param_is_testing_stability = prev_param_is_testing_stability;
+    param_is_testing_stability = prev_param_is_testing_stability; param_is_timing = prev_param_is_timing; param_is_testing_tolerance = prev_param_is_testing_tolerance;
 end
