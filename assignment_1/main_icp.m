@@ -2,30 +2,36 @@
 %   selecting the point selecting technique.
 addpath plotting_code
 addpath code/icp
-global param_is_plotting; param_is_plotting = false;
-global param_is_timing; param_is_timing = false;
-times_run_iter = 1;
-global param_is_testing_tolerance; param_is_testing_tolerance = false; 
-times_run_tolerance = 1;
-global param_is_testing_stability; param_is_testing_stability = false;
-prev_param_is_timing = param_is_timing; prev_param_is_testing_tolerance = param_is_testing_tolerance; prev_param_is_testing_stability = param_is_testing_stability;
+global param_is_plotting; param_is_plotting = true;
 
-times_run_stability = 1;
+global param_is_testing_accuracy; param_is_testing_accuracy = true;
+times_run_accuracy = 3;
+global param_is_timing; param_is_timing = true;
+times_run_timing = 3;
+global param_is_testing_tolerance; param_is_testing_tolerance = true; 
+times_run_tolerance = 3;
+global param_is_testing_stability; param_is_testing_stability = true;
+times_run_stability = 3;
+
+prev_param_is_testing_accuracy = param_is_testing_accuracy; prev_param_is_timing = param_is_timing; prev_param_is_testing_tolerance = param_is_testing_tolerance; prev_param_is_testing_stability = param_is_testing_stability;
+
 delete plots/*.pdf
 delete plots/*.fig
+delete test_results/*.csv
 
-sampling_techniques = {'uniform'};
-% {'allpoints', 'uniform', 'uniform-spatial', 'random', 'informed'};
+sampling_techniques = {'allpoints', 'uniform', 'uniformspatial', 'random', 'informed'};
 sample_size = 1000;
-sample_size_uniform_spatial = 0.001;
+sample_size_uniformspatial = 0.001;
 threshold = 0.0001;
 
 sample_size_iter = sample_size;
 for sampling_technique = sampling_techniques
     sampling_technique = sampling_technique{1};
     
-    if strcmp(sampling_technique, 'uniform-spatial')
-        sample_size_iter = sample_size_uniform_spatial;
+    if strcmp(sampling_technique, 'uniformspatial')
+        sample_size_iter = sample_size_uniformspatial;
+    else
+        sample_size_iter = sample_size;
     end
     
     temp = load('source.mat');
@@ -36,16 +42,25 @@ for sampling_technique = sampling_techniques
     Source_pc(end+1,:) = 1;
     Target_pc(end+1,:) = 1;
     
+    if param_is_testing_accuracy
+        error_matrix = zeros([1, times_run_accuracy]);
+        for x = 1:times_run_accuracy
+            [~, ~, ~, errors] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size_iter);
+            error_matrix(x) = errors(end);
+        end
+        csvwrite(strcat('test_results/accuracy_', sampling_technique, '_iter', int2str(times_run_accuracy), '.csv'), error_matrix)
+    end
+    
     if param_is_timing
-        f_timings = zeros([1, times_run_iter]);
-        g_timings = zeros([1, times_run_iter]);
-        for x = 1:times_run_iter
+        f_timings = zeros([1, times_run_timing]);
+        g_timings = zeros([1, times_run_timing]);
+        for x = 1:times_run_timing
             f = @() sample(Source_pc, sampling_technique, sample_size_iter);
             f_timings(1, x) = timeit(f);
             g = @() sample(Target_pc, sampling_technique, sample_size_iter);  
             g_timings(1, x) = timeit(g);
         end 
-        csvwrite(strcat('test_results/timing_', sampling_technique, '_iter', int2str(times_run_iter), '.csv'), [f_timings;g_timings])
+        csvwrite(strcat('test_results/timing_', sampling_technique, '_iter', int2str(times_run_timing), '.csv'), [f_timings;g_timings])
     end
     
     if param_is_testing_tolerance
@@ -69,12 +84,9 @@ for sampling_technique = sampling_techniques
     end
        
     % normal run
-    param_is_timing = false; param_is_testing_tolerance = false; param_is_testing_stability = false;
+    param_is_testing_accuracy = false; param_is_timing = false; param_is_testing_tolerance = false; param_is_testing_stability = false;
     icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size_iter);
-    % restore previous settings
-    param_is_timing = prev_param_is_timing; param_is_testing_tolerance = prev_param_is_testing_tolerance; param_is_testing_stability = prev_param_is_testing_stability;
     
-    if strcmp(sampling_technique, 'uniform-spatial')
-        sample_size_iter = sample_size;
-    end
+    % restore previous settings
+    param_is_testing_accuracy = prev_param_is_testing_accuracy; param_is_timing = prev_param_is_timing; param_is_testing_tolerance = prev_param_is_testing_tolerance; param_is_testing_stability = prev_param_is_testing_stability;
 end

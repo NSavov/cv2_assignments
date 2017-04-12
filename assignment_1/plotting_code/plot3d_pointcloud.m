@@ -2,7 +2,11 @@ function plot3d_pointcloud(source, target, f_name)
 %OUR_PLOT3D Summary of this function goes here
 %   Detailed explanation goes here
     global param_is_plotting
-    if param_is_plotting
+    global param_is_testing_accuracy
+    global param_is_timing
+    global param_is_testing_tolerance
+    global param_is_testing_stability
+    if param_is_plotting && ~(param_is_timing || param_is_testing_tolerance || param_is_testing_stability || param_is_testing_accuracy)
         sa = source(1,:);
         sb = source(2,:);
         sc = source(3,:);
@@ -15,6 +19,11 @@ function plot3d_pointcloud(source, target, f_name)
         hold on;
         plot3(ta,tb,tc);
         hold off;
+        
+        f_name = strcat(upper(f_name(1:1)), f_name(2:end));
+        title(strrep(f_name,'_',' '))
+        xlabel('x')
+        ylabel('y')
         if nargin < 3 
             f_name = []; 
         end

@@ -10,8 +10,6 @@ function [ transformed_source, R, t, errors ] = icp_algorithm(Source_pc, Target_
     
     Source_pc_sampled = sample(Source_pc, sampling_technique, sample_size);
     Target_pc_sampled = sample(Target_pc, sampling_technique, sample_size);
-    size(Source_pc_sampled)
-    size(Target_pc_sampled)
     Closest_points_pc = get_closest_point_to_target(Source_pc_sampled, Target_pc_sampled, R, t);
     errors = get_rms_error(Source_pc_sampled, Closest_points_pc, R, t);
     iter = iter + 1;
