@@ -1,4 +1,4 @@
-function [ pointCloud ] = merge( pc, frame )
+function [ pointcloud ] = merge( pc, frame )
 %MERGE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -21,11 +21,23 @@ function [ pointCloud ] = merge( pc, frame )
 
     min_p = [intersect_box(1);intersect_box(3);intersect_box(5)];
     max_p = [intersect_box(2);intersect_box(4);intersect_box(6)];
+    
+    pointcloud = [pc frame];
+    inside_mask = all(pointcloud(1:end-1,:)>min_p & pointcloud(1:end-1,:)<max_p, 1);
+    outside_mask = abs(inside_mask - 1);
+    [~, col] = find(inside_mask==1);
+    
+    points_for_sampling = pointcloud(:, col);
+    size(points_for_sampling)
+    sampled = sample(points_for_sampling, 'uniformspatial', 0.01);
 
-    pointCloud = [pc frame];
-    points_for_sampling = reshape(pointCloud(pointCloud(1:end-1,:)>min_p && pointCloud(1:end-1,:)<max_p), [size(pointCloud, 1), size(pointCloud, 2)] );
-    sampled = sample(points_for_sampling, 'uniform-spatial', 0.01);
     
     %construct the cloud from the non-sampled and sampled parts - sampled +
     %the rest
+    [~, col] = find(outside_mask==1);
+    preserved_points = pointcloud(:, col);
+    pointcloud = [preserved_points sampled];
+    pointcloud = sort(pointcloud, 1);
+    
+    
 end

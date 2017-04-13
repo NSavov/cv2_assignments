@@ -2,13 +2,13 @@
 %   selecting the point selecting technique.
 addpath plotting_code
 addpath code/icp
-global param_is_plotting; param_is_plotting = true;
+global param_is_plotting; param_is_plotting = false;
 
-global param_is_testing_stability; param_is_testing_stability = true;
+global param_is_testing_stability; param_is_testing_stability = false;
 times_run_stability = 25;
-global param_is_timing; param_is_timing = true;
+global param_is_timing; param_is_timing = false;
 times_run_timing = 25;
-global param_is_testing_tolerance; param_is_testing_tolerance = true; 
+global param_is_testing_tolerance; param_is_testing_tolerance = false; 
 times_run_tolerance = 25;
 
 prev_param_is_testing_stability = param_is_testing_stability; prev_param_is_timing = param_is_timing; prev_param_is_testing_tolerance = param_is_testing_tolerance;
@@ -17,12 +17,13 @@ delete plots/*.pdf
 delete plots/*.fig
 delete test_results/*.csv
 
-sampling_techniques = {'allpoints', 'uniform', 'uniformspatial', 'random', 'informed'};
+sampling_techniques = {'uniformspatial'};
 sample_size = 1000;
-sample_size_uniformspatial = 0.001;
+sample_size_uniformspatial = 1000;
 threshold = 0.0001;
 
 sample_size_iter = sample_size;
+sampling_techniques
 for sampling_technique = sampling_techniques
     sampling_technique = sampling_technique{1};
     
@@ -39,6 +40,9 @@ for sampling_technique = sampling_techniques
     
     Source_pc(end+1,:) = 1;
     Target_pc(end+1,:) = 1;
+    
+    sample(Source_pc, sampling_technique, sample_size_iter);
+    break;
     
     if param_is_testing_stability
         error_matrix = zeros([1, times_run_stability]);

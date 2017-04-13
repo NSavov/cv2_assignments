@@ -1,4 +1,4 @@
-addpath code
+addpath(genpath('code'))
 
 %define parameters of the merging
 scenes_dir = strcat('..', filesep, 'data');
