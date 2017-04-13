@@ -1,8 +1,9 @@
 %   method checks the accuracy, speed, stability, tolerance to noise by
 %   selecting the point selecting technique.
-addpath plotting_code
+addpath code/plots
 addpath code/icp
-global param_is_plotting; param_is_plotting = true;
+addpath code/merging_scenes
+global param_is_plotting; param_is_plotting = false;
 
 global param_is_testing_stability; param_is_testing_stability = false;
 times_run_stability = 25;
@@ -10,7 +11,7 @@ global param_is_timing; param_is_timing = false;
 times_run_timing = 25;
 global param_is_testing_tolerance; param_is_testing_tolerance = false; 
 times_run_tolerance = 25;
-is_testing = false;
+global is_testing, is_testing = false;
 
 prev_param_is_testing_stability = param_is_testing_stability; prev_param_is_timing = param_is_timing; prev_param_is_testing_tolerance = param_is_testing_tolerance;
 
@@ -22,9 +23,8 @@ if is_testing
     sampling_techniques = {'allpoints', 'uniform', 'uniformspatial', 'random'};
     sample_size_uniformspatial = 0.1685;
 else
-    sampling_techniques = {'allpoints'};
+    sampling_techniques = {'informed'};
 %     sampling_techniques = {'allpoints', 'uniform', 'uniformspatial', 'random', 'informed'};
-%     todo change
     sample_size_uniformspatial = 0.1685;
 end
 sample_size = 1000;
@@ -49,13 +49,18 @@ for sampling_technique = sampling_techniques
         Target_normals = [];
     else 
         Source_pc = read_point_cloud('data/0000000000.pcd')';
-        Target_pc = read_point_cloud('data/0000000001.pcd')';
         Source_normals = read_point_cloud('data/0000000000_normal.pcd')'; 
+        [Source_pc, Source_normals] = remove_background(Source_pc, Source_normals);
+        Target_pc = read_point_cloud('data/0000000001.pcd')';
         Target_normals = read_point_cloud('data/0000000001_normal.pcd')';
+        [Target_pc, Target_normals] = remove_background(Target_pc, Target_normals);
+        [Source_pc, Source_normals, Target_pc, Target_normals] = equalize_point_count(Source_pc, Source_normals, Target_pc, Target_normals);
+        Source_pc = Source_pc(1:3, :);
+        Source_normals = Source_normals(1:3, :);
+        Target_pc = Target_pc(1:3, :);
+        Target_normals = Target_normals(1:3, :);
     end
-%     Source_pc_object = pointCloud(Source_pc(1:3, :)');
-%     Target_pc_object = pointCloud(Target_pc(1:3, :)');
-%     pcshowpair(Source_pc_object,Target_pc_object)
+
     if param_is_testing_stability
         error_matrix = zeros([1, times_run_stability]);
         for x = 1:times_run_stability

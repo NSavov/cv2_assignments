@@ -1,4 +1,4 @@
-function [ Sampled_data ] = sample(Data, Normals, sampling_technique, sample_size)
+function [ Sampled_data ] = get_sample(Data, Normals, sampling_technique, sample_size)
 %SAMPLE Summary of this function goes here
 %   Detailed explanation goes here
     switch sampling_technique
