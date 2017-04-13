@@ -6,8 +6,9 @@ function [fig] = plot_error(x, fig, f_name)
     global param_is_timing
     global param_is_testing_tolerance
     
-    if exist('param_is_plotting', 'var') == 0
+    if isempty(param_is_plotting)
         param_is_plotting = false;
+    end
     
     if param_is_plotting && ~(param_is_timing || param_is_testing_tolerance || param_is_testing_stability)
         if isempty(fig)

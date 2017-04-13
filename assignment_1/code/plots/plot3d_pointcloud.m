@@ -6,6 +6,11 @@ function plot3d_pointcloud(source, target, f_name)
     global param_is_timing
     global param_is_testing_tolerance
     global is_testing 
+    
+    if isempty(param_is_plotting)
+        param_is_plotting = false;
+    end
+    
     if param_is_plotting && ~(param_is_timing || param_is_testing_tolerance || param_is_testing_stability)
         f_name = strcat(upper(f_name(1:1)), f_name(2:end));
         if is_testing

@@ -38,7 +38,7 @@ function [ pointcloud ] = merge( pc, frame )
         points_for_sampling = pointcloud(:, col);
         
         if ~isempty(points_for_sampling)
-            sampled = sample(points_for_sampling, [], 'uniformspatial', 0.001);
+            sampled = get_sample(points_for_sampling, [], 'uniformspatial', 0.001);
         end
         
         [~, col] = find(outside_mask==1);

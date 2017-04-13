@@ -4,13 +4,13 @@ function [ result_pc ] = merge_frames( frames_dir, frame_files, frame_sampling_r
 
     frame_prev = readPcd(fullfile(frames_dir, frame_files(1).name))';
     frame_prev = frame_prev(1:3, :);
-    [frame_prev, ~] = remove_background(frame_prev);
+    [frame_prev, ~] = remove_background(frame_prev, []);
     result_pc = frame_prev;
     for i = 1+frame_sampling_rate:frame_sampling_rate:3%size(frame_files,1)
         frame_files(i).name
         frame_new = readPcd(fullfile(frames_dir, frame_files(i).name))';
         frame_new = frame_new(1:3, :);
-        [frame_new, ~]= remove_background(frame_new);
+        [frame_new, ~]= remove_background(frame_new, []);
 %         pcshow(pointCloud(frame_new'))
 %         figure()
 
