@@ -8,9 +8,13 @@ function [ output_args ] = merge_frames( frames_dir, frame_files, frame_sampling
     %convert to gray if they are rgb
 
     frame_prev = readPcd(fullfile(frames_dir, frame_files(1).name));
+    frame_prev = remove_background(frame_prev);
+    
     for i = 1+frame_sampling_rate:frame_sampling_rate:size(frame_files,1)
         frame_new = readPcd(fullfile(frames_dir, frame_files(i).name));
-        [transformed_frame_new, ~, ~] = icp_algorithm(frame_new, frame_prev, icp_threshold, icp_sampling_technique, icp_sample_size);
+        frame_new = remove_background(frame_new);
+        
+        [transformed_frame_new, ~, ~, ~] = icp_algorithm(frame_new, frame_prev, icp_threshold, icp_sampling_technique, icp_sample_size);
         result_pc = merge(result_pc, transformed_frame_new);
         
         switch pose_estimation_type
