@@ -1,15 +1,15 @@
-function [ transformed_source, R, t, errors ] = icp_algorithm(Source_pc, Target_pc, threshold, sampling_technique, sample_size)
+function [ transformed_source, R, t, errors ] = icp_algorithm(Source_pc, Source_normals, Target_pc, Target_normals, threshold, sampling_technique, sample_size)
 %UNTITLED Summary of this function goes here
 %   
     iter = 0;
     plot3d_pointcloud(Source_pc, Target_pc, strcat('icp_pointcloud_', sampling_technique, '_iter', int2str(iter)));
     % step 1 
+    size(Source_pc)
     n_dims = size(Source_pc, 1);
     R = eye(n_dims);
     t = zeros([n_dims,1]);
-    
-    Source_pc_sampled = sample(Source_pc, sampling_technique, sample_size);
-    Target_pc_sampled = sample(Target_pc, sampling_technique, sample_size);
+    Source_pc_sampled = sample(Source_pc, Source_normals, sampling_technique, sample_size);
+    Target_pc_sampled = sample(Target_pc, Target_normals, sampling_technique, sample_size);
     Closest_points_pc = get_closest_point_to_target(Source_pc_sampled, Target_pc_sampled, R, t);
     errors = get_rms_error(Source_pc_sampled, Closest_points_pc, R, t);
     iter = iter + 1;
@@ -19,8 +19,8 @@ function [ transformed_source, R, t, errors ] = icp_algorithm(Source_pc, Target_
     % icp algorithm
     while is_error_decreasing_above_threshold
         % step 2
-        Source_pc_sampled = sample(Source_pc, sampling_technique, sample_size);
-        Target_pc_sampled = sample(Target_pc, sampling_technique, sample_size);
+        Source_pc_sampled = sample(Source_pc, Source_normals, sampling_technique, sample_size);
+        Target_pc_sampled = sample(Target_pc, Target_normals, sampling_technique, sample_size);
         Closest_points_pc = get_closest_point_to_target(Source_pc_sampled, Target_pc_sampled, R, t);
         
         % step 3
