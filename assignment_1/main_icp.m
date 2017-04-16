@@ -63,6 +63,7 @@ for sampling_technique = sampling_techniques
     end
 
     if param_is_testing_stability
+        'testing_stability'
         error_matrix = zeros([1, times_run_stability]);
         for x = 1:times_run_stability
             [~, ~, ~, errors] = icp_algorithm(Source_pc, Source_normals, Target_pc, Target_normals, threshold, sampling_technique, sample_size_iter);
@@ -72,6 +73,7 @@ for sampling_technique = sampling_techniques
     end
     
     if param_is_timing
+        'timing'
         f_timings = zeros([1, times_run_timing]);
         g_timings = zeros([1, times_run_timing]);
         for x = 1:times_run_timing
@@ -82,6 +84,7 @@ for sampling_technique = sampling_techniques
     end
     
     if param_is_testing_tolerance
+        'testing_tolerance'
         error_matrix = zeros([1, times_run_tolerance]);
         for x = 1:times_run_tolerance
             Source_pc_noise = Source_pc+0.05*randn(size(Source_pc));
