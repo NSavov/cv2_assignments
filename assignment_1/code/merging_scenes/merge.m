@@ -25,7 +25,7 @@ function [ pointcloud ] = merge( pc, frame )
 %     drawBox3d(frame_bbox)
 %     hold on
 %     drawBox3d(intersect_box)
-%     hold off
+%     hold on
     
     sampled = [];
     pointcloud = [pc frame];
@@ -38,9 +38,9 @@ function [ pointcloud ] = merge( pc, frame )
         points_for_sampling = pointcloud(:, col);
         
         if ~isempty(points_for_sampling)
-            sampled = get_sample(points_for_sampling, [], 'uniformspatial', 0.001);
+            sampled = get_sample(points_for_sampling, [], 'uniformspatial', 0.005);
         end
-        
+%         sampled = points_for_sampling;
         [~, col] = find(outside_mask==1);
         preserved_points = pointcloud(:, col);
         
@@ -48,5 +48,5 @@ function [ pointcloud ] = merge( pc, frame )
         pointcloud = [preserved_points sampled];
     end
     
-    pointcloud = sort(pointcloud, 1);
+    pointcloud = sortrows(pointcloud', 1)';
 end
