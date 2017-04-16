@@ -5,11 +5,11 @@ addpath code/icp
 addpath code/merging_scenes
 global param_is_plotting; param_is_plotting = false;
 
-global param_is_testing_stability; param_is_testing_stability = false;
+global param_is_testing_stability; param_is_testing_stability = true;
 times_run_stability = 25;
-global param_is_timing; param_is_timing = false;
+global param_is_timing; param_is_timing = true;
 times_run_timing = 25;
-global param_is_testing_tolerance; param_is_testing_tolerance = false; 
+global param_is_testing_tolerance; param_is_testing_tolerance = true; 
 times_run_tolerance = 25;
 global is_testing, is_testing = false;
 
@@ -21,11 +21,12 @@ delete test_results/*.csv
 
 if is_testing
     sampling_techniques = {'allpoints', 'uniform', 'uniformspatial', 'random'};
-    sample_size_uniformspatial = 0.1685;
+    sample_size_uniformspatial = 0.01685;
 else
-    sampling_techniques = {'informed'};
-%     sampling_techniques = {'allpoints', 'uniform', 'uniformspatial', 'random', 'informed'};
-    sample_size_uniformspatial = 0.1685;
+%     sampling_techniques = {'uniformspatial'};
+%     sampling_techniques = {'random'};
+    sampling_techniques = {'allpoints', 'uniform', 'uniformspatial', 'random', 'informed'};
+    sample_size_uniformspatial = 0.0196;
 end
 sample_size = 1000;
 threshold = 0;
@@ -74,12 +75,10 @@ for sampling_technique = sampling_techniques
         f_timings = zeros([1, times_run_timing]);
         g_timings = zeros([1, times_run_timing]);
         for x = 1:times_run_timing
-            f = @() sample(Source_pc, Source_normals, sampling_technique, sample_size_iter);
+            f = @() icp_algorithm(Source_pc, Source_normals, Target_pc, Target_normals, threshold, sampling_technique, sample_size_iter);
             f_timings(1, x) = timeit(f);
-            g = @() sample(Target_pc, Target_normals, sampling_technique, sample_size_iter);  
-            g_timings(1, x) = timeit(g);
         end 
-        csvwrite(strcat('test_results/timing_', sampling_technique, '_iter', int2str(times_run_timing), '.csv'), [f_timings;g_timings])
+        csvwrite(strcat('test_results/timing_', sampling_technique, '_iter', int2str(times_run_timing), '.csv'), f_timings)
     end
     
     if param_is_testing_tolerance

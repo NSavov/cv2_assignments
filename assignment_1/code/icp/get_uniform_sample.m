@@ -1,10 +1,10 @@
-function [ Sampled_data ] = get_uniform_sample(sample_size)
+function [ Sampled_data ] = get_uniform_sample(Data, sample_size)
 %UNIFORM Summary of this function goes here
 %   Detailed explanation goes here
     step = size(Data, 2)/sample_size;
     pc_size = inf;
-    block_size = 0.01;
-    block_size_step = 0.01;
+    block_size = 0.001;
+    block_size_step = 0.0003;
     pc = pointCloud(Data');
     Sampled_data_new = [];
 
@@ -15,7 +15,7 @@ function [ Sampled_data ] = get_uniform_sample(sample_size)
         pc_size = size(Sampled_data_new, 2);
         block_size = block_size + block_size_step;
     end
-
-    Sampled_data = sample(Sampled_data, 'random', sample_size);
+    block_size
+    size(Sampled_data)
 end
 

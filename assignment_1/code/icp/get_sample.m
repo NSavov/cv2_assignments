@@ -11,6 +11,7 @@ function [ Sampled_data ] = get_sample(Data, Normals, sampling_technique, sample
        
         case 'uniformspatial'   
             % TODO, make it work for 4d
+%             Sampled_data = get_uniform_sample(Data, sample_size);
             pc = pointCloud(Data(1:3, :)');
             pc_sampled = pcdownsample(pc,'gridAverage',sample_size);
             Sampled_data = pc_sampled.Location';

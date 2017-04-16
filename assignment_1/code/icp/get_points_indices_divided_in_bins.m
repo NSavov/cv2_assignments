@@ -12,7 +12,6 @@ function [ total ] = get_points_indices_divided_in_bins(normals, num_bins)
         histogram_bins_per_dim(x, :) = discretize(data, edges);
         total = total + bins_per_dims^(x-1) * (discretize(data, edges)'-1);
     end
-    
     total = total + 1;
 end
 
