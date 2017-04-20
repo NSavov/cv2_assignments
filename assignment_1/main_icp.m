@@ -5,13 +5,13 @@ addpath code/icp
 addpath code/merging_scenes
 global param_is_plotting; param_is_plotting = false;
 
-global param_is_testing_stability; param_is_testing_stability = true;
+global param_is_testing_stability; param_is_testing_stability = false;
 times_run_stability = 25;
-global param_is_timing; param_is_timing = true;
+global param_is_timing; param_is_timing = false;
 times_run_timing = 25;
-global param_is_testing_tolerance; param_is_testing_tolerance = true; 
+global param_is_testing_tolerance; param_is_testing_tolerance = false; 
 times_run_tolerance = 25;
-global is_testing, is_testing = false;
+global is_testing, is_testing = true;
 
 prev_param_is_testing_stability = param_is_testing_stability; prev_param_is_timing = param_is_timing; prev_param_is_testing_tolerance = param_is_testing_tolerance;
 
@@ -25,7 +25,7 @@ if is_testing
 else
 %     sampling_techniques = {'uniformspatial'};
 %     sampling_techniques = {'random'};
-    sampling_techniques = {'allpoints', 'uniform', 'uniformspatial', 'random', 'informed'};
+    sampling_techniques = {'uniformspatial'};%{'allpoints', 'uniform', 'uniformspatial', 'random', 'informed'};
     sample_size_uniformspatial = 0.0196;
 end
 sample_size = 1000;
@@ -49,11 +49,11 @@ for sampling_technique = sampling_techniques
         Source_normals = [];
         Target_normals = [];
     else 
-        Source_pc = read_point_cloud('data/0000000000.pcd')';
-        Source_normals = read_point_cloud('data/0000000000_normal.pcd')'; 
+        Source_pc = readPcd('data/0000000000.pcd')';
+        Source_normals = readPcd('data/0000000000_normal.pcd')'; 
         [Source_pc, Source_normals] = remove_background(Source_pc, Source_normals);
-        Target_pc = read_point_cloud('data/0000000001.pcd')';
-        Target_normals = read_point_cloud('data/0000000001_normal.pcd')';
+        Target_pc = readPcd('data/0000000001.pcd')';
+        Target_normals = readPcd('data/0000000001_normal.pcd')';
         [Target_pc, Target_normals] = remove_background(Target_pc, Target_normals);
         [Source_pc, Source_normals, Target_pc, Target_normals] = equalize_point_count(Source_pc, Source_normals, Target_pc, Target_normals);
         Source_pc = Source_pc(1:3, :);
