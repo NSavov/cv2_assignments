@@ -25,9 +25,7 @@ for pose_estimation_type = pose_estimation_types
         frame_files = frame_files (1:2:end);
 
         %sample frames
-%         frame_files(56)=[];
         frame_files = frame_files(1:frame_sampling_rate:end);
-        % frame_files = frame_files(28:30);
 
         %perform the merging of the frames
         [result_cloud, score] = merge_frames(scenes_dir, frame_files, pose_estimation_type, icp_threshold, icp_sampling_technique, icp_sample_size, merge_sample_size, true, enable_plotting);
