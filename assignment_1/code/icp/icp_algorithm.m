@@ -39,7 +39,6 @@ function [ transformed_source, R, t, errors ] = icp_algorithm(Source_pc, Source_
     plot3d_pointcloud(transformed_source, Target_pc, strcat('icp_pointcloud_', sampling_technique, '_iter', int2str(iter)));
     
     global param_is_plotting
-    
     if param_is_plotting
         close all;
     end

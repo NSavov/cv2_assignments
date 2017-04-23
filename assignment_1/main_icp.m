@@ -15,15 +15,14 @@ global is_testing, is_testing = true;
 
 prev_param_is_testing_stability = param_is_testing_stability; prev_param_is_timing = param_is_timing; prev_param_is_testing_tolerance = param_is_testing_tolerance;
 
-delete plots/*.pdf
-delete plots/*.fig
-delete test_results/*.csv
+% delete plots/*.pdf
+% delete plots/*.fig
+% delete test_results/*.csv
 
 if is_testing
     sampling_techniques = {'allpoints', 'uniform', 'uniformspatial', 'random'};
     sample_size_uniformspatial = 0.01685;
 else
-%     sampling_techniques = {'uniformspatial'};
 %     sampling_techniques = {'random'};
     sampling_techniques = {'uniformspatial'};%{'allpoints', 'uniform', 'uniformspatial', 'random', 'informed'};
     sample_size_uniformspatial = 0.0196;
@@ -33,7 +32,7 @@ threshold = 0;
 
 sample_size_iter = sample_size;
 for sampling_technique = sampling_techniques
-    sampling_technique = sampling_technique{1};
+    sampling_technique = sampling_technique{1}
     
     if strcmp(sampling_technique, 'uniformspatial')
         sample_size_iter = sample_size_uniformspatial;
@@ -66,6 +65,7 @@ for sampling_technique = sampling_techniques
         'testing_stability'
         error_matrix = zeros([1, times_run_stability]);
         for x = 1:times_run_stability
+            x
             [~, ~, ~, errors] = icp_algorithm(Source_pc, Source_normals, Target_pc, Target_normals, threshold, sampling_technique, sample_size_iter);
             error_matrix(x) = errors(end);
         end
@@ -77,6 +77,7 @@ for sampling_technique = sampling_techniques
         f_timings = zeros([1, times_run_timing]);
         g_timings = zeros([1, times_run_timing]);
         for x = 1:times_run_timing
+            x
             f = @() icp_algorithm(Source_pc, Source_normals, Target_pc, Target_normals, threshold, sampling_technique, sample_size_iter);
             f_timings(1, x) = timeit(f);
         end 
@@ -87,9 +88,12 @@ for sampling_technique = sampling_techniques
         'testing_tolerance'
         error_matrix = zeros([1, times_run_tolerance]);
         for x = 1:times_run_tolerance
+            x
             Source_pc_noise = Source_pc+0.05*randn(size(Source_pc));
             Target_pc_noise = Target_pc+0.05*randn(size(Target_pc));
-            [~, ~, ~, errors] = icp_algorithm(Source_pc, Source_normals, Target_pc, Target_normals, threshold, sampling_technique, sample_size_iter);
+            Source_normals = Source_normals+0.05*randn(size(Target_pc));
+            Target_normals = Target_normals+0.05*randn(size(Target_pc));
+            [~, ~, ~, errors] = icp_algorithm(Source_pc_noise, Source_normals, Target_pc_noise, Target_normals, threshold, sampling_technique, sample_size_iter);
             error_matrix(x) = errors(end);
         end
         csvwrite(strcat('test_results/tolerance_', sampling_technique, '_iter', int2str(times_run_tolerance), '.csv'), error_matrix)
