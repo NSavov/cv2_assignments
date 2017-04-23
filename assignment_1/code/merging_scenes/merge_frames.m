@@ -1,11 +1,9 @@
 function [ result_pc, score ] = merge_frames( frames_dir, frame_files, pose_estimation_type, icp_threshold, icp_sampling_technique, icp_sample_size, merge_sample_size, circular_score, show_plot)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
-    
-%     frame_files = circshift(frame_files,40);
-
+   
     %reading the first frame and
-    frame_prev = readPcd(fullfile(frames_dir, frame_files(1).name))';
+    frame_prev = read_point_cloud(fullfile(frames_dir, frame_files(1).name))';
     frame_prev = frame_prev(1:3, :);
     frame_prev = remove_nan(frame_prev, []);
     [frame_prev, ~] = remove_background(frame_prev, []);
@@ -24,7 +22,7 @@ function [ result_pc, score ] = merge_frames( frames_dir, frame_files, pose_esti
     for i = 2:size(frame_files,1)
         %reading and processing the new frame
         disp(strcat('Current frame: ', frame_files(i).name))
-        frame_new = readPcd(fullfile(frames_dir, frame_files(i).name))';
+        frame_new = read_point_cloud(fullfile(frames_dir, frame_files(i).name))';
         frame_new = frame_new(1:3, :);
         frame_new = remove_nan(frame_new, []);
         [frame_new, ~]= remove_background(frame_new, []);
@@ -63,11 +61,14 @@ function [ result_pc, score ] = merge_frames( frames_dir, frame_files, pose_esti
         
     end
     
+    %move the final cloud to the first frame position
     [~, R,t, ~] = icp_algorithm(frame_first, [],frame_first_original , [], icp_threshold, icp_sampling_technique, icp_sample_size);
     result_pc = (R)*result_pc + t;
     
     result_pc = remove_background(result_pc, []);
     
+    %compute the difference between the first and last frame if circular is
+    %set, then normalize
     normalizer = size(frame_files,1);
     if circular_score
         Closest_points_pc = get_closest_point_to_target(frame_first, frame_new, eye(3), [0;0;0]);

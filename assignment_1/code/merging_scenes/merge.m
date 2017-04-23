@@ -25,12 +25,14 @@ function [ pointcloud ] = merge( pc, frame, merge_sample_size )
     pointcloud = [pc frame];
     
     if intersection_available
+        %find points in the intersection
         inside_mask = all(pointcloud(:,:)>min_p & pointcloud(:,:)<max_p, 1);
         outside_mask = abs(inside_mask - 1);
         [~, col] = find(inside_mask==1);
 
         points_for_sampling = pointcloud(:, col);
         
+        %sample these points
         if ~isempty(points_for_sampling)
             sampled = get_sample(points_for_sampling, [], 'uniformspatial', merge_sample_size);
         end

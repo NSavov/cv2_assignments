@@ -31,12 +31,11 @@ for pose_estimation_type = pose_estimation_types
 
         %perform the merging of the frames
         [result_cloud, score] = merge_frames(scenes_dir, frame_files, pose_estimation_type, icp_threshold, icp_sampling_technique, icp_sample_size, merge_sample_size, true, enable_plotting);
-        figure()
+
         pcshow(pointCloud(result_cloud'))
-        filename = char(strcat('test_results', filesep, pose_estimation_type, '_', icp_sampling_technique, '_', 'step',string(frame_sampling_rate)));
+        filename = char(strcat('test_results', filesep, pose_estimation_type, '_', icp_sampling_technique, '_', 'step',string(frame_sampling_rate),'_','score', string(score), '.fig'));
         savefig(filename)
     end
 end
-% fscatter3(result_cloud(1,:),result_cloud(2,:),result_cloud(3,:), sqrt(result_cloud(1,:).^2+result_cloud(2,:).^2+result_cloud(3,:))*100)
-score
+
 
