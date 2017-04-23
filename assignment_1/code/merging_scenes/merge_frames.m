@@ -1,4 +1,4 @@
-function [ result_pc ] = merge_frames( frames_dir, frame_files, frame_sampling_rate,pose_estimation_type, icp_threshold, icp_sampling_technique, icp_sample_size, show_plot)
+function [ result_pc, score ] = merge_frames( frames_dir, frame_files, pose_estimation_type, icp_threshold, icp_sampling_technique, icp_sample_size, merge_sample_size, circular_score, show_plot)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
     
@@ -9,11 +9,19 @@ function [ result_pc ] = merge_frames( frames_dir, frame_files, frame_sampling_r
     frame_prev = frame_prev(1:3, :);
     frame_prev = remove_nan(frame_prev, []);
     [frame_prev, ~] = remove_background(frame_prev, []);
+    frame_first_original = frame_prev;
+    frame_first = frame_prev;
+    frame_new = frame_first;
 
     % adding it to the final cloud
     result_pc = frame_prev;
+    score = 0;
     
-    for i = 1+frame_sampling_rate:frame_sampling_rate:size(frame_files,1)
+    if show_plot
+        figure()
+    end
+    
+    for i = 2:size(frame_files,1)
         %reading and processing the new frame
         disp(strcat('Current frame: ', frame_files(i).name))
         frame_new = readPcd(fullfile(frames_dir, frame_files(i).name))';
@@ -22,15 +30,18 @@ function [ result_pc ] = merge_frames( frames_dir, frame_files, frame_sampling_r
         [frame_new, ~]= remove_background(frame_new, []);
         
         %match new frame to the previous one with ICP 
-        [~, R,t, ~] = icp_algorithm(frame_new, [],frame_prev , [], icp_threshold, icp_sampling_technique, icp_sample_size);
+        [~, R,t, error] = icp_algorithm(frame_new, [],frame_prev , [], icp_threshold, icp_sampling_technique, icp_sample_size);
         
+        score = score + error(end);
         %transform the final cloud to the position of the new frame
-        result_pc = (pinv(R)*(result_pc - t));
+        result_pc = (pinv(R)*(result_pc-t));
+        frame_first = (pinv(R)*(frame_first-t));
 
         %merge the cloud and the new frame by applying uniform spatial
         %sampling on
-        result_pc = merge(result_pc, frame_new);
+        result_pc = merge(result_pc, frame_new, merge_sample_size);
 
+        %show creation of the result pointcloud with each frame
         if show_plot
             source_pc = pointCloud(result_pc');
             target_pc = pointCloud(frame_new');
@@ -51,6 +62,19 @@ function [ result_pc ] = merge_frames( frames_dir, frame_files, frame_sampling_r
         end
         
     end
-%     result_pc = pinv(final_R)*(result_pc-final_t);
+    
+    [~, R,t, ~] = icp_algorithm(frame_first, [],frame_first_original , [], icp_threshold, icp_sampling_technique, icp_sample_size);
+    result_pc = (R)*result_pc + t;
+    
+    result_pc = remove_background(result_pc, []);
+    
+    normalizer = size(frame_files,1);
+    if circular_score
+        Closest_points_pc = get_closest_point_to_target(frame_first, frame_new, eye(3), [0;0;0]);
+        score = score + get_rms_error(frame_first, Closest_points_pc, eye(3), [0;0;0]);
+        normalizer = normalizer + 1;
+    end
+    
+    score = score/normalizer;
 end
 

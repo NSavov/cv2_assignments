@@ -1,23 +1,42 @@
 addpath(genpath('code'))
-addpath('plotting_code')
 
 %define parameters of the merging
 scenes_dir = strcat('data');
 file_ext = '*.pcd';
 
-pose_estimation_type = 'all_frames'; %choices are: 'prev_frame' (apply icp on the previous frame and the current frame)
+enable_plotting = false;
+
+frame_sampling_rates = {1 2 4 10};%step for iterating through the frames
+pose_estimation_types = {'prev_frame', 'all_frames'};%choices are: 'prev_frame' (apply icp on the previous frame and the current frame)
                                                   %'all_frames' (apply icp on the previous result pointcloud and the current frame)
-                           
-frame_sampling_rate = 2;   %step for iterating through the frames
+
 icp_threshold = 0;
 icp_sampling_technique = 'uniformspatial'; 
-icp_sample_size = 0.0046;
+icp_sample_size = 0.0065;
+merge_sample_size = 0.002;
 
-%getting the point clouds
-frame_files = dir(fullfile(scenes_dir, file_ext));
-frame_files = frame_files (1:2:end);
+for pose_estimation_type = pose_estimation_types
+    pose_estimation_type = pose_estimation_type{1};
+    
+    for frame_sampling_rate = frame_sampling_rates
+        frame_sampling_rate = frame_sampling_rate{1};
+        %getting the point clouds
+        frame_files = dir(fullfile(scenes_dir, file_ext));
+        frame_files = frame_files (1:2:end);
 
-%perform the merging of the frames
-result_cloud = merge_frames(scenes_dir, frame_files, frame_sampling_rate, pose_estimation_type, icp_threshold, icp_sampling_technique, icp_sample_size, true);
-pcshow(pointCloud(result_cloud'))
+        %sample frames
+%         frame_files(56)=[];
+        frame_files = frame_files(1:frame_sampling_rate:end);
+        % frame_files = frame_files(28:30);
+
+        %perform the merging of the frames
+        [result_cloud, score] = merge_frames(scenes_dir, frame_files, pose_estimation_type, icp_threshold, icp_sampling_technique, icp_sample_size, merge_sample_size, true, enable_plotting);
+        figure()
+        pcshow(pointCloud(result_cloud'))
+        filename = char(strcat('test_results', filesep, pose_estimation_type, '_', icp_sampling_technique, '_', 'step',string(frame_sampling_rate)));
+        savefig(filename)
+    end
+end
+% fscatter3(result_cloud(1,:),result_cloud(2,:),result_cloud(3,:), sqrt(result_cloud(1,:).^2+result_cloud(2,:).^2+result_cloud(3,:))*100)
+score
 

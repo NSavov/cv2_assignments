@@ -1,4 +1,4 @@
-function [ pointcloud ] = merge( pc, frame )
+function [ pointcloud ] = merge( pc, frame, merge_sample_size )
 %MERGE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -32,7 +32,7 @@ function [ pointcloud ] = merge( pc, frame )
         points_for_sampling = pointcloud(:, col);
         
         if ~isempty(points_for_sampling)
-            sampled = get_sample(points_for_sampling, [], 'uniformspatial', 0.002);
+            sampled = get_sample(points_for_sampling, [], 'uniformspatial', merge_sample_size);
         end
         [~, col] = find(outside_mask==1);
         preserved_points = pointcloud(:, col);
