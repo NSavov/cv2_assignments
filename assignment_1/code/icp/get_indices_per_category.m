@@ -1,6 +1,8 @@
+% Nedko Savov (11404345), Joop Pascha (10090614)
+% Date: 24/04/2017
+
 function [ output ] = get_indices_per_category(points_divided_into_bins, unique_bins)
-%GET_INDICES_PER_CATEGORY Summary of this function goes here
-%   Detailed explanation goes here
+% helper function of get_informed_sample
     output = cell([size(unique_bins, 1), 1]);
     num = 0;
     for bin = unique_bins'

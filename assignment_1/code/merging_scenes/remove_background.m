@@ -1,3 +1,6 @@
+% Nedko Savov (11404345), Joop Pascha (10090614)
+% Date: 24/04/2017
+
 function [ pointcloud, pointcloud_normals ] = remove_background( pointcloud, pointcloud_normals)
 %REMOVE_BACKGROUND Summary of this function goes here
 %   Detailed explanation goes here

@@ -1,3 +1,8 @@
+% Original file from Kavin Lai, modified slightly to make it work with both 
+% linux and windows by:
+% Nedko Savov (11404345), Joop Pascha (10090614)
+% Date: 24/04/2017
+
 function data = read_point_cloud(fname)
 % Read PCD data
 % fname - Path to the PCD file
@@ -82,12 +87,15 @@ elseif isBinary && ~IS_NEW
    data(:) = pts;
    data = data';
 else
+    % added lines
+    % ---------------
    is_windows = ispc;
    if is_windows
       format = [format '\n'];
    else
       format = [format '\r\n'];
    end
+   % ---------------
    C = textscan(fid,format);
 
    data = cell2mat(C);

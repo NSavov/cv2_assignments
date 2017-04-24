@@ -1,3 +1,6 @@
+% Nedko Savov (11404345), Joop Pascha (10090614)
+% Date: 24/04/2017
+
 function [fig] = plot_error(x, fig, f_name)
 %OUR_PLOT Summary of this function goes here
 %   Detailed explanation goes here

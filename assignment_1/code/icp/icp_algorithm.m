@@ -1,6 +1,9 @@
+% Nedko Savov (11404345), Joop Pascha (10090614)
+% Date: 24/04/2017
+
+% This function is broken up in 4 parts that correspond with the ones 
+% mentioned in the 1.1 implementation section of the assignment.
 function [ transformed_source, R, t, errors ] = icp_algorithm(Source_pc, Source_normals, Target_pc, Target_normals, threshold, sampling_technique, sample_size)
-%UNTITLED Summary of this function goes here
-%   
     iter = 0;
     plot3d_pointcloud(Source_pc, Target_pc, strcat('icp_pointcloud_', sampling_technique, '_iter', int2str(iter)));
     % step 1 
@@ -34,6 +37,8 @@ function [ transformed_source, R, t, errors ] = icp_algorithm(Source_pc, Source_
         iter = iter + 1;
     end
     
+    % Apply the obtained transformation to transform the source to the
+    % target
     transformed_source = R*Source_pc + t;
     plot_error(errors, fig, strcat('icp_error_', sampling_technique, '_iter', int2str(iter)));
     plot3d_pointcloud(transformed_source, Target_pc, strcat('icp_pointcloud_', sampling_technique, '_iter', int2str(iter)));

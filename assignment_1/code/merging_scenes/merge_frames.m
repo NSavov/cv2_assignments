@@ -1,3 +1,6 @@
+% Nedko Savov (11404345), Joop Pascha (10090614)
+% Date: 24/04/2017
+
 function [ result_pc, score ] = merge_frames( frames_dir, frame_files, pose_estimation_type, icp_threshold, icp_sampling_technique, icp_sample_size, merge_sample_size, circular_score, show_plot)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here

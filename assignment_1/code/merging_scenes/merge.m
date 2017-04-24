@@ -1,3 +1,6 @@
+% Nedko Savov (11404345), Joop Pascha (10090614)
+% Date: 24/04/2017
+
 function [ pointcloud ] = merge( pc, frame, merge_sample_size )
 %MERGE Summary of this function goes here
 %   Detailed explanation goes here
