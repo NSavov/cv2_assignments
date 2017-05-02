@@ -7,11 +7,12 @@ function [ fm ] = get_fundamental_matrix( im1, im2 )
     [f2, d2] = vl_sift(single(im2));
     [f2, d2] = remove_sift_descriptors_in_background(f2, d2, im2);
     threshold = 1.5; % default is 1.5
-    [matches, scores] = vl_ubcmatch(d1, d2, threshold); 
+    [matches, ~] = vl_ubcmatch(d1, d2, threshold); 
     
-    trials = 100; 
-    sample_count = 50;
+    trials = 1000; 
+    sample_count = 100;
     [transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matches, trials, sample_count);
+    plot_matching_descriptors(im1, im2, matches(:, inlier_indices), f1, f2, 'test')
     pause
     fm = [];
 end
