@@ -12,17 +12,37 @@ function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matc
         selection = shuffled_indices(1:sample_size);
         point_selection = matches(:, selection);
         
-        % construct t vector
+        % eight point algorithm
         p1 = f1(1:2, point_selection(1,:));
         p2 = f2(1:2, point_selection(2,:));
-        b = reshape(p2, [numel(p2), 1]);
-        A = construct_a_matrix(p1);
-        t = pinv(A)*b;
-        pixel_outlier_threshold = 10; % in pixels
+        T = get_normalisation_matrix(p1,p2);
         
+        p1h = p1;
+        p1h(3,:) = 1;
+        p2h = p2;
+        p2h(3,:) = 1;
+        
+        size(T)
+        size(p1h)
+        p1n = T * p1h;
+        p2n = T * p2h;
+        
+        A = construct_a_matrix(p1n(:, 1:2), p2n(:, 1:2));
+        [~, ~, V] = svd(A);
+        F = reshape(V(end,:), [3,3]);
+        
+        % correct F
+        [Uf, Df, Vf] = svd(F);
+        Df(3,3) = 0;
+        size(Uf)
+        size(Df)
+        size(Vf)
+        F = Uf*Df*Vf;
+        F = inv(T)'*F'*T; % denormalise
+ 
+        outlier_threshold = 5;
         % calculate inliers with the obtained t vector
-        inliers = calculate_inliers(all_matches_f1, all_matches_f2, t, pixel_outlier_threshold);  
-        current_inlier_count = length(inliers);
+        current_inlier_count = get_inlier_count(all_matches_f1, all_matches_f2, F, outlier_threshold);  
         
         % update best sample if necessary
         if current_inlier_count > inlier_count

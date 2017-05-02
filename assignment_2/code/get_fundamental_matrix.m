@@ -9,8 +9,8 @@ function [ fm ] = get_fundamental_matrix( im1, im2 )
     threshold = 1.5; % default is 1.5
     [matches, ~] = vl_ubcmatch(d1, d2, threshold); 
     
-    trials = 1000; 
-    sample_count = 100;
+    trials = 100; 
+    sample_count = 8;
     [transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matches, trials, sample_count);
     plot_matching_descriptors(im1, im2, matches(:, inlier_indices), f1, f2, 'test')
     pause
