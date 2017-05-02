@@ -5,7 +5,6 @@ function plot_matching_descriptors( Ia, Ib, matches, fa, fb, fig_name)
     % vl_demo_sift_match.m from toolbox/demo folder in VLFeat package.
     % http://www.vlfeat.org/matlab/demo/vl_demo_sift_match.html
     max(matches(1,:))
-    size(fa)
     xa = fa(1,matches(1,:)) ;
     xb = fb(1,matches(2,:)) + size(Ia,2) ;
     ya = fa(2,matches(1,:)) ;

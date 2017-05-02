@@ -1,5 +1,5 @@
 function [ mask ] = get_background_mask( img )
-%REMOVE_BACKGROUND Summary of this function goes here
+    % todo	
     factor = 10;
     img = imadjust(img, [0.045, 1], []);
     img = imadjust(img);

@@ -7,8 +7,8 @@ img_names = get_image_names_from_directory('data/', 'png');
 % im2 = imread(img_n{1});
 % im2 = imread(img_names{2});
 
-im1 = rgb2gray(imread('data/left.jpg'));
-im2 = rgb2gray(imread('data/right.jpg'));
+im1 = imread('data/boat1.pgm');
+im2 = imread('data/boat2.pgm');
 fm = get_fundamental_matrix(im1, im2);
 % im1 = im2;
 % end

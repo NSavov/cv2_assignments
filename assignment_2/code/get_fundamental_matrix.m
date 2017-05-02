@@ -10,9 +10,10 @@ function [ F ] = get_fundamental_matrix( im1, im2 )
     [matches, ~] = vl_ubcmatch(d1, d2, threshold); 
     size(matches)
     
-    trials = 100; 
-    sample_count = 10; % fixed for this assignment
-    [F, inlier_count, inlier_indices] = ransac(f1, f2, matches, trials, sample_count);
+    trials = 1000; 
+    outlier_threshold = 10000;
+    sample_count = 8; % fixed for this assignment
+    [F, inlier_count, inlier_indices] = ransac(f1, f2, matches, trials, sample_count, outlier_threshold);
     inlier_count
-%     plot_matching_descriptors(im1, im2, matches(:, inlier_indices), f1, f2, 'test');
+    plot_matching_descriptors(im1, im2, matches(:, inlier_indices), f1, f2, 'test');
 end
