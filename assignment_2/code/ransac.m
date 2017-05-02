@@ -10,22 +10,23 @@ function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matc
         % pick [sample_size] random samples
         shuffled_indices = randperm(size(matches,2));
         selection = shuffled_indices(1:sample_size);
-        point_selection = matches(:, selection);
+        point_index_selection = matches(:, selection);
         
         % eight point algorithm
-        p1 = f1(1:2, point_selection(1,:));
-        p2 = f2(1:2, point_selection(2,:));
-        T = get_normalisation_matrix(p1,p2);
+        p1 = f1(1:2, point_index_selection(1,:)); 
+        p2 = f2(1:2, point_index_selection(2,:));
+        T = get_normalisation_matrix(p1);
+        Tp = get_normalisation_matrix(p2);
         
+        % make coordinates homogenous
         p1h = p1;
         p1h(3,:) = 1;
         p2h = p2;
         p2h(3,:) = 1;
         
-        size(T)
-        size(p1h)
+        % normalizing p1 and p2
         p1n = T * p1h;
-        p2n = T * p2h;
+        p2n = Tp * p2h;
         
         A = construct_a_matrix(p1n(:, 1:2), p2n(:, 1:2));
         [~, ~, V] = svd(A);
@@ -34,21 +35,17 @@ function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matc
         % correct F
         [Uf, Df, Vf] = svd(F);
         Df(3,3) = 0;
-        size(Uf)
-        size(Df)
-        size(Vf)
         F = Uf*Df*Vf;
-        F = inv(T)'*F'*T; % denormalise
+        F = Tp'*F*T; % denormalise
  
-        outlier_threshold = 5;
+        outlier_threshold = 10;
         % calculate inliers with the obtained t vector
         current_inlier_count = get_inlier_count(all_matches_f1, all_matches_f2, F, outlier_threshold);  
-        
         % update best sample if necessary
         if current_inlier_count > inlier_count
             inlier_count = current_inlier_count;
             inlier_indices = selection;
-            transformation_m = t;
+            transformation_m = F;
         end
     end
 end

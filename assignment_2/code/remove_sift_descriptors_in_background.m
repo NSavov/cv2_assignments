@@ -6,7 +6,6 @@ function [f, d] = remove_sift_descriptors_in_background( f, d, im )
     index = 1;
     x_width = size(im, 1);
     y_width = size(im, 2);
-    size(f)
     for loc = f  
        x = int64(loc(1));
        y = int64(loc(2));

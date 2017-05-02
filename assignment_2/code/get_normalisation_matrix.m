@@ -1,12 +1,10 @@
-function [ T ] = get_normalisation_matrix( p1, p2 )
+function [ T ] = get_normalisation_matrix( p )
 %GET_NORMALISATION_MATRIX Summary of this function goes here
 %   Detailed explanation goes here
-    n = size(p1, 1);
-    cpx = [p1(:, 1);p2(:, 1)];
-    cpy = [p1(:, 2);p2(:, 2)];
-    mx = sum(cpx) / n;
-    my = sum(cpy) / n;
-    d = sum(sqrt( (cpx - mx).^2 + (cpy-my).^2)) / n;
+    n = size(p, 2);
+    mx = sum(p(1, :)) / n;
+    my = sum(p(2, :)) / n;
+    d = sum(sqrt((p(1, :) - mx).^2 + (p(2, :) - my).^2)) / n;
     T = zeros([3,3]);
     T(1,1) = sqrt(2) / d;
     T(2,2) = sqrt(2) / d;
