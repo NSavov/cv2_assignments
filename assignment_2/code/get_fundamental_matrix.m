@@ -10,8 +10,8 @@ function [ F ] = get_fundamental_matrix( im1, im2 )
     [matches, ~] = vl_ubcmatch(d1, d2, threshold); 
     size(matches)
     
-    trials = 1000; 
-    outlier_threshold = 10000;
+    trials = 100; 
+    outlier_threshold = sqrt(2)*0.1;
     sample_count = 8; % fixed for this assignment
     [F, inlier_count, inlier_indices] = ransac(f1, f2, matches, trials, sample_count, outlier_threshold);
     inlier_count

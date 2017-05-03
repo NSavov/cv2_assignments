@@ -5,6 +5,9 @@ function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matc
     all_matches_f1 = f1(1:2, matches(1, :));
     all_matches_f2 = f2(1:2, matches(2, :));
     
+    all_matches_f1(end+1, :) = 1;
+    all_matches_f2(end+1, :) = 1;
+    
     % ransac loop for [trials] number of time to obtain best match
     for i = 1:trials
         % pick [sample_size] random samples
@@ -36,15 +39,16 @@ function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matc
         [Uf, Df, Vf] = svd(F);
         Df(3,3) = 0;
         F = Uf*Df*Vf;
-        F = Tp'*F*T; % denormalise
-
+%         F = Tp'*F*T; % denormalise
+ 
+%         outlier_threshold = sqrt(2)*0.1;
         % calculate inliers with the obtained t vector
-        current_inlier_count = get_inlier_count(all_matches_f1, all_matches_f2, F, outlier_threshold);  
+        current_inlier_count = get_inlier_count(T*all_matches_f1, Tp*all_matches_f2, F, outlier_threshold);  
         % update best sample if necessary
         if current_inlier_count > inlier_count
             inlier_count = current_inlier_count;
             inlier_indices = selection;
-            transformation_m = F;
+            transformation_m = Tp'*F*T;
         end
     end
 end
