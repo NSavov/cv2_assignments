@@ -33,21 +33,22 @@ function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matc
         
         A = construct_a_matrix(p1n(:, 1:2), p2n(:, 1:2));
         [~, ~, V] = svd(A);
+        V=V';
         F = reshape(V(end,:), [3,3]);
         
         % correct F
         [Uf, Df, Vf] = svd(F);
         Df(3,3) = 0;
-        F = Uf*Df*Vf;
-%         F = Tp'*F*T; % denormalise
+        F = Uf*Df*Vf';
+        F = Tp'*F*T; % denormalise
  
         % calculate inliers with the obtained t vector
-        current_inlier_count = get_inlier_count(T*all_matches_f1, Tp*all_matches_f2, F, outlier_threshold);  
+        current_inlier_count = get_inlier_count(all_matches_f1, all_matches_f2, F, outlier_threshold);  
         % update best sample if necessary
         if current_inlier_count > inlier_count
             inlier_count = current_inlier_count;
             inlier_indices = selection;
-            transformation_m = Tp'*F*T;
+            transformation_m = F;
         end
     end
 end

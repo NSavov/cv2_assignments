@@ -12,7 +12,7 @@ function [ mask ] = get_background_mask( img )
     mask = imfill(mask,8);
     mask(mask >= threshold) = 1;
     mask = logical(mod(mask, 2));
-    imshow(mask)
-    pause 
+%     imshow(mask)
+%     pause 
 end
 
