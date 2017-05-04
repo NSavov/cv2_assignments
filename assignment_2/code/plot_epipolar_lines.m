@@ -10,6 +10,7 @@ function [  ] = plot_epipolar_lines( F, source_points, image)
 %     xlim([0 size(image, 2)])
     ylim([0 size(image, 1)])
     plot(target_x, target_y, 'r')
-    hold off
+%     set(gca,'YDir','normal')
+%     hold off
 end
 

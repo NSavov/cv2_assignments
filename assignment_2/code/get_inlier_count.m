@@ -11,7 +11,6 @@ function [ inlier_count ] = get_inlier_count(p1, p2, F, threshold)
     for i = 1:size(p1, 2)
         distances(i) = get_sampson_distance(F, p1h(:,i), p2h(:,i));
     end
-    
     inlier_count = sum(distances < threshold);
 end
 

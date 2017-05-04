@@ -33,8 +33,7 @@ function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matc
         
         A = construct_a_matrix(p1n(:, 1:2), p2n(:, 1:2));
         [~, ~, V] = svd(A);
-        V=V';
-        F = reshape(V(end,:), [3,3]);
+        F = reshape(V(:,end), [3,3]);
         
         % correct F
         [Uf, Df, Vf] = svd(F);
