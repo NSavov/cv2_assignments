@@ -31,7 +31,7 @@ function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matc
         p1n = T * p1h;
         p2n = Tp * p2h;
         
-        A = construct_a_matrix(p1n(:, 1:2), p2n(:, 1:2));
+        A = construct_a_matrix(p1n(1:2, :), p2n(1:2, :));
         [~, ~, V] = svd(A);
         F = reshape(V(:,end), [3,3]);
         

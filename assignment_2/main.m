@@ -1,9 +1,9 @@
 addpath code
 run ./vlfeat/toolbox/vl_setup.m
 
-trials = 300; 
-outlier_threshold = 2;
-sample_count = 10;
+trials = 100; 
+outlier_threshold = 1;
+sample_count = 8;
 
 img_names = get_image_names_from_directory('data/', 'png');
 offset = 0;
