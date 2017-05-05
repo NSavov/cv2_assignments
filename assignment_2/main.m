@@ -1,7 +1,7 @@
 addpath code/chaining
 addpath code/fundamental_matrix
 addpath code/helper
-addpath code/plotting
+addpath code/plotting_and_printing
 addpath code/structure_from_motion
 run ./vlfeat/toolbox/vl_setup.m
 
