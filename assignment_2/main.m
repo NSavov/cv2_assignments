@@ -7,7 +7,7 @@ run ./vlfeat/toolbox/vl_setup.m
 
 trials = 100; 
 outlier_threshold = 1;
-sample_count = 8;
+sample_count = 20;
 
 img_names = get_image_names_from_directory('data/', 'png');
 offset = 0;
@@ -17,9 +17,12 @@ match_list = {};
 % clf
 % im2 = imread(img_n{1});
 im2 = imread(img_names{2+offset});
-[fm, f1, d1] = get_fundamental_matrix(im1, im2, trials, sample_count, outlier_threshold);
+[f1, d1, f2, d2, matches] = get_sift(im1, im2);
+[F, inlier_indices] = get_fundamental_matrix(f1, f2, matches, trials, sample_count, outlier_threshold);
 match_list{end+1} = {f1, d1};
 % im1 = im2;
 % end
+selected_matches = matches(:,inlier_indices(1:8));
+plot_transformations( F, selected_matches, f1, f2, im1, im2)
 
 point_view_matrix = construct_pointview_matrix(match_list, size(img_names, 2));

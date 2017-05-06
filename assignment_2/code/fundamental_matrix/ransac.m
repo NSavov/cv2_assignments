@@ -42,11 +42,11 @@ function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matc
         F = Tp'*F*T; % denormalise
  
         % calculate inliers with the obtained t vector
-        current_inlier_count = get_inlier_count(all_matches_f1, all_matches_f2, F, outlier_threshold);  
+        [current_inlier_count, inlier_mask] = get_inlier_count(all_matches_f1, all_matches_f2, F, outlier_threshold);  
         % update best sample if necessary
         if current_inlier_count > inlier_count
             inlier_count = current_inlier_count;
-            inlier_indices = selection;
+            inlier_indices = find(inlier_mask);
             transformation_m = F;
         end
     end
