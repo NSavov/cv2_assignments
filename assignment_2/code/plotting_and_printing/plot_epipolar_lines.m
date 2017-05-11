@@ -1,10 +1,10 @@
 function [  ] = plot_epipolar_lines( F, source_points, image)
 %PLOT_EPIPOLAR_LINE Summary of this function goes here
 %   Detailed explanation goes here
-
+    image = image ./ 1.0;
     target_x = 0:size(image, 2);
     [target_y] = get_epipolar_lines(F, source_points, target_x);
-    imagesc(image)
+    imshow(image)
     hold on
     set(gca,'YDir','Reverse')
 %     xlim([0 size(image, 2)])
