@@ -1,6 +1,10 @@
 function plot_matching_descriptors( Ia, Ib, matches, fa, fb, fig_name)
     figure('name', fig_name); clf ;
     imshow(cat(2, Ia, Ib)) ;
+    
+    n_samples = 50;
+    sel = randsample(1:size(matches,2), n_samples);
+    matches = matches(:, sel);
     % to not reinvent the wheel, this code came from demo code from the 
     % vl_demo_sift_match.m from toolbox/demo folder in VLFeat package.
     % http://www.vlfeat.org/matlab/demo/vl_demo_sift_match.html
