@@ -32,11 +32,14 @@ function [ pointview, tracked_points, tracked_descriptors ] = update_pointview_m
     tracked_points(:, end+1:end+n) = 0;
 
     %convert old indices to new
+    new_tracked_descriptors = zeros(size(tracked_descriptors));
     for i=1:size(f1_inlier_indices, 2)
-       tracked_descriptors(tracked_descriptors==f1_inlier_indices(i))=f2_inlier_indices(i);
+       new_tracked_descriptors(tracked_descriptors==f1_inlier_indices(i))=f2_inlier_indices(i);
     end
-
-    tracked_points_entry = ones(2, size(pointview,2));
+    
+    tracked_descriptors = new_tracked_descriptors;
+    
+    tracked_points_entry = zeros(2, size(pointview,2));
 
     tracked_points_entry(1:2, tracked_descriptors>0) = f2(1:2, tracked_descriptors(tracked_descriptors>0));
 %     tracked_points_entry
@@ -48,7 +51,6 @@ function [ pointview, tracked_points, tracked_descriptors ] = update_pointview_m
     else
         pointview(end, end-n+1:end) = 1;
         tracked_points(end-1:end, end-n+1:end) = f1(1:2, new_desc);
-        
     end
     
     pointview = vertcat(pointview, pointview_entry);
