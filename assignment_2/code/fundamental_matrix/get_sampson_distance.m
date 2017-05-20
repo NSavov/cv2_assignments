@@ -1,5 +1,6 @@
 function [ d ] = get_sampson_distance( F, p1, p2)
-    % todo
+%get_sampson_distance obtain the distance between two points given the
+%fundamental distance.
     numerator = (p2'*F*p1).^2;
     
     temp_fp = F*p1;

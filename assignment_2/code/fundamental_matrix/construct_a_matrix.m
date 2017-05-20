@@ -1,5 +1,5 @@
 function [ A ] = construct_a_matrix(p1, p2)
-    % todo
+    % following the step-by-step guide as given in the assignment
     A = zeros(size(p1,2), 9);
     x = p1(1,:);
     y = p1(2,:);

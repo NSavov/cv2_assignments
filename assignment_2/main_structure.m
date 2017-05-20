@@ -4,43 +4,32 @@ addpath code/helper
 addpath code/plotting_and_printing
 addpath code/structure_from_motion
 run ./vlfeat/toolbox/vl_setup.m
-% 
-% trials = 100; 
-% outlier_threshold = 1;
-% sample_count = 8;
-% 
-% 
-% img_names = get_image_names_from_directory('data/', 'png');
-% start_index = 1;
-% end_index = 10;%size(img_names, 2);
-% 
-% [pointview, tracked_descriptors] = chain( img_names,start_index, end_index, trials, outlier_threshold, sample_count );
 
 first = 1;
 last = 6;
 
-
+% load variables from saved pointview (created in main_chaining.m)
 s = matfile('pointview_t1.mat');
 pointview = s.pointview;
 tracked_descriptors = s.tracked_descriptors;
-%select dense block and extract overlapping points
+
+% select dense block and extract overlapping points
 dense_block = pointview(first:last,:);
 point_indices = find(all(dense_block));
 filtered_points = tracked_descriptors(2*(first-1)+1:2*last, point_indices);
 
-size(point_indices)
-%normalize 
+% normalize 
 filtered_points = filtered_points - sum(filtered_points, 2)/size(filtered_points, 2);
 
-%construct D matrix
 % splitted = num2cell(filtered_points, [2 3]); %split A keeping dimension 2 and 3 intact
 % splitted = cellfun(@squeeze, splitted,'UniformOutput', false);
 
+% construct D matrix
 D = filtered_points;%vertcat(splitted{:});
 size(D)
 % D = dlmread('PointViewMatrix.txt');
 
-%derive shape and motion matrices
+% derive shape and motion matrices
 [U,W,V] = svd(D);
 U3 = U(:, 1:3);
 W3 = W(1:3, 1:3);
@@ -49,7 +38,7 @@ V3 = V(:, 1:3);
 M = U3*sqrt(W3);
 S = sqrt(W3)*V3';
 
-%disambiguate
+% disambiguate
 % L = pinv(M)*eye(size(M, 1))*pinv(M');
 L = eye(size(M, 1))/M'\M;
 C = chol(L)/3;

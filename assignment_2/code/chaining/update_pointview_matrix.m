@@ -1,7 +1,5 @@
 function [ pointview, tracked_points, tracked_descriptors ] = update_pointview_matrix( pointview, tracked_points, tracked_descriptors, inlier_indices, matches, f1, f2 )
-%UPDATE_POINTVIEW_MATRIX Summary of this function goes here
-%   Detailed explanation goes here
-
+%  
     construct_phase = false;
     
     f1_inlier_indices = matches(1,inlier_indices);
@@ -42,7 +40,7 @@ function [ pointview, tracked_points, tracked_descriptors ] = update_pointview_m
     tracked_points_entry = zeros(2, size(pointview,2));
 
     tracked_points_entry(1:2, tracked_descriptors>0) = f2(1:2, tracked_descriptors(tracked_descriptors>0));
-%     tracked_points_entry
+    % tracked_points_entry
     pointview_entry(tracked_descriptors == 0) = 0;
     
     if construct_phase

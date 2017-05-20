@@ -1,4 +1,8 @@
-function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matches, trials, sample_size, outlier_threshold)    
+function [ transformation_m, inlier_count, inlier_indices] = ransac(f1, f2, matches, trials, sample_size, outlier_threshold) 
+% iterative algorithm that achieves an appropiate point-set if possible by
+% randomly sampling points from keypoints of interests. The result is the
+% funamental transormation F. Code is partially adapted from the RANSAC
+% algorithm as was programmed during CV1.
     inlier_count = -1;
     inlier_indices = [];
     transformation_m = [];

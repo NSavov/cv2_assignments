@@ -1,7 +1,6 @@
 function [ pointview, tracked_points ] = chain( img_paths, start_index, end_index, trials, outlier_threshold, sample_count )
 %CHAIN Summary of this function goes here
 %   Detailed explanation goes here
-
     im1 = imread(img_paths{start_index});
     pointview = [];
     tracked_descriptors = [];
@@ -14,7 +13,6 @@ function [ pointview, tracked_points ] = chain( img_paths, start_index, end_inde
         
         %read the image
         img_n = {img_paths{img_i}};
-        img_n
         im2 = imread(img_n{1});
 
         %find tracked matches
