@@ -1,6 +1,8 @@
 function [ T ] = get_normalisation_matrix( p )
-%GET_NORMALISATION_MATRIX Summary of this function goes here
-%   Detailed explanation goes here
+%get_normalisation_matrix improve stability by normalizing
+%   pointcloud is moved to have zero mean and sqrt(2) variance. It was
+%   shown in literature that this improves the stability and training time
+%   of the algorithm.
     n = size(p, 2);
     mx = sum(p(1, :)) / n;
     my = sum(p(2, :)) / n;

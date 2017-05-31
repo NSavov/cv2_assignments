@@ -4,73 +4,19 @@ addpath code/helper
 addpath code/plotting_and_printing
 addpath code/structure_from_motion
 run ./vlfeat/toolbox/vl_setup.m
-% 
-% trials = 100; 
-% outlier_threshold = 1;
-% sample_count = 8;
-% 
-% 
-% img_names = get_image_names_from_directory('data/', 'png');
-% start_index = 1;
-% end_index = 10;%size(img_names, 2);
-% 
-% [pointview, tracked_descriptors] = chain( img_names,start_index, end_index, trials, outlier_threshold, sample_count );
 
-first = 1;
-last = 6;
+use_reference = false;
+interval = 20;
+skip = 0;
 
-
-s = matfile('pointview_t1.mat');
+% load variables from saved pointview (created in main_chaining.m)
+s = matfile('pointview_t0.2.mat');
+pointview_mask = s.pointview_mask;
 pointview = s.pointview;
-tracked_descriptors = s.tracked_descriptors;
-%select dense block and extract overlapping points
-dense_block = pointview(first:last,:);
-point_indices = find(all(dense_block));
-filtered_points = tracked_descriptors(2*(first-1)+1:2*last, point_indices);
 
-size(point_indices)
-%normalize 
-filtered_points = filtered_points - sum(filtered_points, 2)/size(filtered_points, 2);
+%reconstruct 3D points from movement on frames
+S = generate_model(pointview_mask, pointview, interval, skip, use_reference);
 
-%construct D matrix
-% splitted = num2cell(filtered_points, [2 3]); %split A keeping dimension 2 and 3 intact
-% splitted = cellfun(@squeeze, splitted,'UniformOutput', false);
-
-D = filtered_points;%vertcat(splitted{:});
-size(D)
-% D = dlmread('PointViewMatrix.txt');
-
-%derive shape and motion matrices
-[U,W,V] = svd(D);
-U3 = U(:, 1:3);
-W3 = W(1:3, 1:3);
-V3 = V(:, 1:3);
-
-M = U3*sqrt(W3);
-S = sqrt(W3)*V3';
-
-%disambiguate
-% L = pinv(M)*eye(size(M, 1))*pinv(M');
-L = eye(size(M, 1))/M'\M;
-C = chol(L)/3;
-
-M = M*C;
-S = pinv(C)*S;
-
-% pc = pointCloud(S);
-
-% pcshow(pc)
-
-% scatter3(S(1,:), S(2,:), S(3,:))
+% plot 3D points
 tri = delaunay(S(1,:),S(2,:));
-h = trimesh(tri, S(1,:), S(2,:), S(3,:));
-
-%reverse concatenate to retrieve Ai
-% l = ones(1, size(M, 1)/2)*2;
-% A = mat2cell(M, l, size(M,2));
-
-% for Ai = A{1:end}
-%     Ai*filtered_points;
-% end
-
-%M * L * M'
+h = trisurf(tri, S(1,:), S(2,:), S(3,:));
