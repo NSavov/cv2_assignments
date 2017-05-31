@@ -25,6 +25,7 @@
 #include <opencv2/core/eigen.hpp>
     
 #include "Frame3D/Frame3D.h"
+using namespace std;
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr mat2IntegralPointCloud(const cv::Mat& depth_mat, const float focal_length, const float max_depth) {
     // This function converts a depth image to a point cloud
@@ -83,11 +84,33 @@ typename pcl::PointCloud<T>::Ptr transformPointCloudNormals(typename pcl::PointC
 int main(int argc, char *argv[]) {
     if (argc != 2)
         return 0;
-    
+
     Frame3D frames[8];
     
     for (int i = 0; i < 8; ++i) {
         frames[i].load(boost::str(boost::format("%s/%05d.3df") % argv[1] % i));
+    }
+
+    for (int i = 0; i < 2; ++i) {
+        cv::Mat depth_image =  frames[i].depth_image_;
+        double focal_length = frames[i].focal_length_;
+//        Eigen::Matrix4f& camera_pose = frames[i].getEigenTransform();
+
+        cv::Size size = depth_image.size();
+        int depth_width  = size.width;
+        int depth_height  = size.height;
+
+
+        int cx = depth_width / 2;
+        int cy = depth_height / 2;
+
+        cout<<cx<<' '<<cy<<endl;
+//        int u_unscaled = std::round(focal_length * (point.x / point.z) + cx);
+//        int v_unscaled = std::round(focal_length * (point.y / point.z) + cy);
+
+//        float u = static_cast<float>(u_unscaled / sizeX);
+//        float v = static_cast<float>(v_unscaled / sizeY);
+
     }
 
     // YOUR CODE
