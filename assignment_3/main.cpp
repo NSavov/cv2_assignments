@@ -11,12 +11,16 @@
 #include <pcl/point_cloud.h>
 #include <pcl/features/integral_image_normal.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/visualization/cloud_viewer.h>
 #include <pcl/common/transforms.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/surface/poisson.h>
 #include <pcl/surface/impl/texture_mapping.hpp>
 #include <pcl/features/normal_3d_omp.h>
+#include <pcl/surface/marching_cubes_hoppe.h>
+#include <pcl/surface/marching_cubes_rbf.h>
+#include <pcl/PolygonMesh.h>
 
 #include <eigen3/Eigen/Core>
 
@@ -26,6 +30,7 @@
     
 #include "Frame3D/Frame3D.h"
 using namespace std;
+using namespace pcl;
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr mat2IntegralPointCloud(const cv::Mat& depth_mat, const float focal_length, const float max_depth) {
     // This function converts a depth image to a point cloud
@@ -81,6 +86,13 @@ typename pcl::PointCloud<T>::Ptr transformPointCloudNormals(typename pcl::PointC
     return transformed_cloud;
 }
 
+void
+viewerOneOff (pcl::visualization::PCLVisualizer& viewer)
+{
+    viewer.setBackgroundColor (1.0, 1.0, 1.0);
+
+}
+
 int main(int argc, char *argv[]) {
     if (argc != 2)
         return 0;
@@ -91,29 +103,65 @@ int main(int argc, char *argv[]) {
         frames[i].load(boost::str(boost::format("%s/%05d.3df") % argv[1] % i));
     }
 
-    for (int i = 0; i < 2; ++i) {
+    pcl::PointCloud<pcl::PointNormal> full_cloud;
+
+    for (int i = 0; i < 8; ++i) {
         cv::Mat depth_image =  frames[i].depth_image_;
         double focal_length = frames[i].focal_length_;
-//        Eigen::Matrix4f& camera_pose = frames[i].getEigenTransform();
-
-        cv::Size size = depth_image.size();
-        int depth_width  = size.width;
-        int depth_height  = size.height;
-
-
-        int cx = depth_width / 2;
-        int cy = depth_height / 2;
-
-        cout<<cx<<' '<<cy<<endl;
-//        int u_unscaled = std::round(focal_length * (point.x / point.z) + cx);
-//        int v_unscaled = std::round(focal_length * (point.y / point.z) + cy);
-
-//        float u = static_cast<float>(u_unscaled / sizeX);
-//        float v = static_cast<float>(v_unscaled / sizeY);
-
+        const Eigen::Matrix4f& camera_pose = frames[i].getEigenTransform();
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = mat2IntegralPointCloud(depth_image, focal_length, 1);
+        pcl::PointCloud<pcl::PointNormal>::Ptr cloud_normals = computeNormals(cloud);
+        pcl::PointCloud<pcl::PointNormal>::Ptr transformed_cloud_normals =  transformPointCloudNormals<pcl::PointNormal>(cloud_normals,  camera_pose);
+        full_cloud += *transformed_cloud_normals;
     }
 
-    // YOUR CODE
+
+    PointCloud<PointNormal>::Ptr xyz_cloud(&full_cloud);
+
+//    PointCloud<PointXYZRGB> cloud_xyzrgb;
+//    copyPointCloud(full_cloud, cloud_xyzrgb);
+
+//    PointCloud<PointXYZRGB>::Ptr cloud_xyzrgb_ptr(&cloud_xyzrgb);
+
+//    pcl::visualization::CloudViewer pc_viewer ("Simple Cloud Viewer");
+
+//    pc_viewer.showCloud (cloud_xyzrgb_ptr);
+//    pc_viewer.runOnVisualizationThreadOnce (viewerOneOff);
+//    while (!pc_viewer.wasStopped ())
+//    {
+//    }
+
+    float iso_level = 0.0f;
+    int default_hoppe_or_rbf = 0;
+    float extend_percentage = 0.0f;
+    int grid_res = 0.00001f;
+    float off_surface_displacement = 0.001f;
+
+
+    int hoppe_or_rbf = 0;
+    MarchingCubes<PointNormal> *mc;
+    if (hoppe_or_rbf == 0)
+      mc = new MarchingCubesHoppe<PointNormal> ();
+    else
+    {
+      mc = new MarchingCubesRBF<PointNormal> ();
+      (reinterpret_cast<MarchingCubesRBF<PointNormal>*> (mc))->setOffSurfaceDisplacement (off_surface_displacement);
+    }
+
+    mc->setIsoLevel (iso_level);
+    mc->setGridResolution (grid_res, grid_res, grid_res);
+    mc->setPercentageExtendGrid (extend_percentage);
+    mc->setInputCloud (xyz_cloud);
+
+    //      TicToc tt;
+    //      tt.tic ();
+
+     cout<<"Computing "<<endl;
+
+     PolygonMesh mesh;
+    mc->reconstruct (mesh);
+    delete mc;
+
     
     /*
      You can obtain UV coordinates as following (it's a pseudo code)
@@ -137,8 +185,39 @@ int main(int argc, char *argv[]) {
      */
     
     
+    /* TEXTURING:
+     *
+        cv::Size size = depth_image.size();
+        int depth_width  = size.width;
+        int depth_height  = size.height;
+
+
+        int cx = depth_width / 2;
+        int cy = depth_height / 2;
+
+        cout<<cx<<' '<<cy<<endl;
+//        int u_unscaled = std::round(focal_length * (point.x / point.z) + cx);
+//        int v_unscaled = std::round(focal_length * (point.y / point.z) + cy);
+
+//        float u = static_cast<float>(u_unscaled / sizeX);
+//        float v = static_cast<float>(v_unscaled / sizeY);
+    */
+
     std::cout << "Finished texturing" << std::endl;
-    
+
+
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("3D Viewer"));
+    viewer->setBackgroundColor(1, 1, 1);
+    viewer->addPolygonMesh(mesh, "meshes", 0);
+    viewer->addCoordinateSystem(1.0);
+    viewer->initCameraParameters();
+
+    while (!viewer->wasStopped()) {
+     viewer->spinOnce(100);
+     boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+    }
+
+
     /*
      * To visualize pcl::PolygonMesh at the end you can use PCLVisualizer as following:
      * 
