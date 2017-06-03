@@ -6,6 +6,7 @@
  */
 #include <iostream>
 #include <boost/format.hpp>
+#include <vector>
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -20,6 +21,8 @@
 #include <pcl/features/normal_3d_omp.h>
 #include <pcl/surface/marching_cubes_hoppe.h>
 #include <pcl/surface/marching_cubes_rbf.h>
+#include <pcl/surface/marching_cubes.h>
+#include <pcl/surface/poisson.h>
 #include <pcl/PolygonMesh.h>
 
 #include <eigen3/Eigen/Core>
@@ -86,11 +89,43 @@ typename pcl::PointCloud<T>::Ptr transformPointCloudNormals(typename pcl::PointC
     return transformed_cloud;
 }
 
-void
-viewerOneOff (pcl::visualization::PCLVisualizer& viewer)
+void viewerOneOff (pcl::visualization::PCLVisualizer& viewer)
 {
     viewer.setBackgroundColor (1.0, 1.0, 1.0);
+}
 
+pcl::PointCloud<pcl::PointNormal> build_full_cloud(Frame3D frames[])
+{
+    pcl::PointCloud<pcl::PointNormal> full_cloud;
+
+    for (int i = 0; i < 8; ++i) {
+        cv::Mat depth_image =  frames[i].depth_image_;
+        double focal_length = frames[i].focal_length_;
+        const Eigen::Matrix4f& camera_pose = frames[i].getEigenTransform();
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = mat2IntegralPointCloud(depth_image, focal_length, 1);
+        pcl::PointCloud<pcl::PointNormal>::Ptr cloud_normals = computeNormals(cloud);
+
+        pcl::PointCloud<pcl::PointNormal>::Ptr transformed_cloud_normals =  transformPointCloudNormals<pcl::PointNormal>(cloud_normals,  camera_pose);
+
+        full_cloud += *transformed_cloud_normals;
+    }
+
+    std::vector< int > index ;
+    pcl::PointCloud<pcl::PointNormal> filtered_cloud_normals;
+    pcl::removeNaNNormalsFromPointCloud(full_cloud, filtered_cloud_normals, index);
+
+    return filtered_cloud_normals;
+}
+
+PolygonMesh reconstruct(pcl::PointCloud<pcl::PointNormal>::Ptr xyz_cloud, int depth)
+{
+    PolygonMesh mesh;
+
+    Poisson<PointNormal> poisson;
+    poisson.setDepth(depth);
+    poisson.setInputCloud(xyz_cloud);
+    poisson.reconstruct(mesh);
+    return mesh;
 }
 
 int main(int argc, char *argv[]) {
@@ -103,66 +138,12 @@ int main(int argc, char *argv[]) {
         frames[i].load(boost::str(boost::format("%s/%05d.3df") % argv[1] % i));
     }
 
-    pcl::PointCloud<pcl::PointNormal> full_cloud;
-
-    for (int i = 0; i < 8; ++i) {
-        cv::Mat depth_image =  frames[i].depth_image_;
-        double focal_length = frames[i].focal_length_;
-        const Eigen::Matrix4f& camera_pose = frames[i].getEigenTransform();
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = mat2IntegralPointCloud(depth_image, focal_length, 1);
-        pcl::PointCloud<pcl::PointNormal>::Ptr cloud_normals = computeNormals(cloud);
-        pcl::PointCloud<pcl::PointNormal>::Ptr transformed_cloud_normals =  transformPointCloudNormals<pcl::PointNormal>(cloud_normals,  camera_pose);
-        full_cloud += *transformed_cloud_normals;
-    }
-
-
+    pcl::PointCloud<pcl::PointNormal> full_cloud = build_full_cloud(frames);
     PointCloud<PointNormal>::Ptr xyz_cloud(&full_cloud);
 
-//    PointCloud<PointXYZRGB> cloud_xyzrgb;
-//    copyPointCloud(full_cloud, cloud_xyzrgb);
+//POISSON SURFACE RECONSTRUCTION
+    PolygonMesh mesh = reconstruct(xyz_cloud, 8);
 
-//    PointCloud<PointXYZRGB>::Ptr cloud_xyzrgb_ptr(&cloud_xyzrgb);
-
-//    pcl::visualization::CloudViewer pc_viewer ("Simple Cloud Viewer");
-
-//    pc_viewer.showCloud (cloud_xyzrgb_ptr);
-//    pc_viewer.runOnVisualizationThreadOnce (viewerOneOff);
-//    while (!pc_viewer.wasStopped ())
-//    {
-//    }
-
-    float iso_level = 0.0f;
-    int default_hoppe_or_rbf = 0;
-    float extend_percentage = 0.0f;
-    int grid_res = 0.00001f;
-    float off_surface_displacement = 0.001f;
-
-
-    int hoppe_or_rbf = 0;
-    MarchingCubes<PointNormal> *mc;
-    if (hoppe_or_rbf == 0)
-      mc = new MarchingCubesHoppe<PointNormal> ();
-    else
-    {
-      mc = new MarchingCubesRBF<PointNormal> ();
-      (reinterpret_cast<MarchingCubesRBF<PointNormal>*> (mc))->setOffSurfaceDisplacement (off_surface_displacement);
-    }
-
-    mc->setIsoLevel (iso_level);
-    mc->setGridResolution (grid_res, grid_res, grid_res);
-    mc->setPercentageExtendGrid (extend_percentage);
-    mc->setInputCloud (xyz_cloud);
-
-    //      TicToc tt;
-    //      tt.tic ();
-
-     cout<<"Computing "<<endl;
-
-     PolygonMesh mesh;
-    mc->reconstruct (mesh);
-    delete mc;
-
-    
     /*
      You can obtain UV coordinates as following (it's a pseudo code)
      
@@ -238,3 +219,77 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
+//SCRAP CODE
+
+//CHECK FOR NANS
+
+//    for(pcl::PointCloud<pcl::PointNormal>::iterator it = filtered_cloud_normals.begin(); it!= filtered_cloud_normals.end(); it++){
+//    cout << it->x << ", " << it->y << ", " << it->z << endl;
+//    }
+
+//SCALING
+//    int N = 100;
+//    Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
+//    transform (0,0) = transform (0,0) * N;
+//    transform (1,1) = transform (1,1) * N;
+//    transform (2,2) = transform (2,2) * N;
+//    PointCloud<PointNormal>::Ptr full_cloud_ptr(&full_cloud);
+//    PointCloud<PointNormal>::Ptr xyz_cloud = transformPointCloudNormals<PointNormal>(full_cloud_ptr, transform);
+
+//SHOW XYZ POINTCLOUD
+//    PointCloud<PointXYZRGB> cloud_xyzrgb;
+//    copyPointCloud(*xyz_cloud, cloud_xyzrgb);
+
+//    PointCloud<PointXYZRGB>::Ptr cloud_xyzrgb_ptr(&cloud_xyzrgb);
+
+//    pcl::visualization::CloudViewer pc_viewer ("Simple Cloud Viewer");
+
+//    pc_viewer.showCloud (cloud_xyzrgb_ptr);
+//    pc_viewer.runOnVisualizationThreadOnce (viewerOneOff);
+//    while (!pc_viewer.wasStopped ())
+//    {
+//    }
+
+
+//MARCHING CUBES
+//    float iso_level = 0.5f;
+//     double leafSize = 0.01;
+//    int hoppe_or_rbf = 0;
+//    float extend_percentage = 0.0f;
+//    int grid_res = 50;
+//    float off_surface_displacement = 0.001f;
+
+//    pcl::search::KdTree<PointNormal>::Ptr tree (new pcl::search::KdTree<PointNormal>);
+
+//    MarchingCubes<PointNormal> *mc;
+//    if (hoppe_or_rbf == 0)
+//      mc = new MarchingCubesHoppe<PointNormal> ();
+//    else
+//    {
+//      mc = new MarchingCubesRBF<PointNormal> ();
+//      (reinterpret_cast<MarchingCubesRBF<PointNormal>*> (mc))->setOffSurfaceDisplacement (off_surface_displacement);
+//    }
+
+//    mc->setIsoLevel (iso_level);
+//    mc->setGridResolution (grid_res, grid_res, grid_res);
+//    mc->setPercentageExtendGrid (extend_percentage);
+////    mc->setSearchMethod(tree);
+//    mc->setInputCloud (xyz_cloud);
+
+//     cout<<"Computing "<<endl;
+
+//    mc->reconstruct (mesh);
+//    delete mc;
+
+//POISSON WITH MORE PARAMS
+
+//    Poisson<PointNormal> poisson;
+//    poisson.setDepth (depth);
+//    poisson.setSolverDivide (solver_divide);
+//    poisson.setIsoDivide (iso_divide);
+//poisson.setPointWeight (point_weight);
+//poisson.setInputCloud (xyz_cloud);
+
+//cout<<"Computing ..."<<endl;
+//poisson.reconstruct (mesh);
