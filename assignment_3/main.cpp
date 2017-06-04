@@ -7,6 +7,9 @@
 #include <iostream>
 #include <boost/format.hpp>
 #include <vector>
+#include <cmath>
+#include <limits>
+#include <numeric>
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -24,6 +27,7 @@
 #include <pcl/surface/marching_cubes.h>
 #include <pcl/surface/poisson.h>
 #include <pcl/PolygonMesh.h>
+#include <pcl/surface/texture_mapping.h>
 
 #include <eigen3/Eigen/Core>
 
@@ -128,7 +132,34 @@ PolygonMesh reconstruct(pcl::PointCloud<pcl::PointNormal>::Ptr xyz_cloud, int de
     return mesh;
 }
 
+struct UVPoint{
+    float u;
+    float v;
+};
+
+struct Color{
+
+    Color()
+    {
+        this->b = 0;
+        this->g = 0;
+        this->r = 0;
+    }
+
+    Color(int b, int g, int r)
+    {
+        this->b = b;
+        this->g = g;
+        this->r = r;
+    }
+
+    int b;
+    int g;
+    int r;
+};
+
 int main(int argc, char *argv[]) {
+
     if (argc != 2)
         return 0;
 
@@ -142,51 +173,255 @@ int main(int argc, char *argv[]) {
     PointCloud<PointNormal>::Ptr xyz_cloud(&full_cloud);
 
 //POISSON SURFACE RECONSTRUCTION
-    PolygonMesh mesh = reconstruct(xyz_cloud, 8);
+    PolygonMesh mesh = reconstruct(xyz_cloud, 10);
 
-    /*
-     You can obtain UV coordinates as following (it's a pseudo code)
-     
-     ```
-     // Principal points
-     int cx = depth_width / 2;
-     int cy = depth_height / 2;
-     int u_unscaled = std::round(focal_length * (point.x / point.z) + cx);
-     int v_unscaled = std::round(focal_length * (point.y / point.z) + cy);
-            
-     float u = static_cast<float>(u_unscaled / sizeX);
-     float v = static_cast<float>(v_unscaled / sizeY);
-     
-     // Remember to check that u, v are in the range [0, 1)
-            
-     /// Correspondent point in the RGB image
-     int x = std::floor(rgb_width * u);
-     int y = std::floor(rgb_height * v);
+//COLORING
 
-     */
-    
-    
-    /* TEXTURING:
-     *
-        cv::Size size = depth_image.size();
-        int depth_width  = size.width;
-        int depth_height  = size.height;
+    std::vector< pcl::Vertices> polygons = mesh.polygons;
+
+    PointCloud<PointXYZRGB> mesh_cloud;
+    PointCloud<PointXYZRGB>::Ptr mesh_cloud_ptr(&mesh_cloud);
+    pcl::fromPCLPointCloud2(mesh.cloud ,*mesh_cloud_ptr);
+
+    vector<vector<Color>> colors(mesh_cloud_ptr->size());
+
+    for (int i = 0; i < 8; ++i) {
 
 
-        int cx = depth_width / 2;
-        int cy = depth_height / 2;
+        cv::Mat depth_image =  frames[i].depth_image_;
 
-        cout<<cx<<' '<<cy<<endl;
-//        int u_unscaled = std::round(focal_length * (point.x / point.z) + cx);
-//        int v_unscaled = std::round(focal_length * (point.y / point.z) + cy);
+        int cx = depth_image.cols / 2;
+        int cy = depth_image.rows / 2;
 
-//        float u = static_cast<float>(u_unscaled / sizeX);
-//        float v = static_cast<float>(v_unscaled / sizeY);
-    */
+        cv::Mat rgb_image = frames[i].rgb_image_;
+
+        int rgb_width = rgb_image.cols;
+        int rgb_height = rgb_image.rows;
+
+
+//        uint32_t ** zbuffer_points = new uint32_t *[rgb_image.rows ];
+
+//        for(size_t i = 0; i < rgb_image.rows; ++i)
+//            zbuffer_points[i] = new uint32_t [rgb_image.cols];
+
+//        for(int rows=0; rows<rgb_image.rows; rows++)
+//            for(int cols=0; cols<rgb_image.cols; cols++)
+//            {
+//                zbuffer_points[rows ][cols] = std::numeric_limits<uint32_t>::max ();
+//            }
+
+
+
+//        double** zbuffer = new double*[rgb_image.rows ];
+
+//        for(size_t i = 0; i < rgb_image.rows; ++i)
+//            zbuffer[i] = new double[rgb_image.cols];
+
+//        for(int rows=0; rows<rgb_image.rows; rows++)
+//            for(int cols=0; cols<rgb_image.cols; cols++)
+//            {
+//                zbuffer[rows ][cols] = 0;
+//            }
+
+
+        double focal_length = frames[i].focal_length_;
+        const Eigen::Matrix4f& camera_pose = frames[i].getEigenTransform().inverse();
+        PointCloud<PointXYZRGB>::Ptr transformed_mesh_cloud_ptr =  transformPointCloud(mesh_cloud_ptr,  camera_pose);
+//  FOR ISPOINTOCCLUDED
+//        PointCloud<PointXYZ> transformed_mesh_cloud_xyz;
+//        PointCloud<PointXYZ>::Ptr transformed_mesh_cloud_xyz_ptr(&transformed_mesh_cloud_xyz);
+//        pcl::copyPointCloud (*transformed_mesh_cloud_ptr, transformed_mesh_cloud_xyz);
+
+//        float resolution = 128.0f;
+//        pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree (resolution);
+
+//        octree.setInputCloud(transformed_mesh_cloud_xyz_ptr);
+//        octree.addPointsFromInputCloud();
+//        pcl::TextureMapping< PointXYZ >::OctreePtr octree_ptr(&octree);
+//        pcl::TextureMapping<pcl::PointXYZ> tm;
+        for(std::vector<pcl::Vertices>::iterator it = polygons.begin(); it != polygons.end(); ++it)
+        {
+            PointXYZRGB& pnt3 = (*transformed_mesh_cloud_ptr)[(*it).vertices[0]];
+            PointXYZRGB& pnt2 = (*transformed_mesh_cloud_ptr)[(*it).vertices[1]];
+            PointXYZRGB& pnt1 = (*transformed_mesh_cloud_ptr)[(*it).vertices[2]];
+
+            pcl::PointXYZ pt3(pnt3.x, pnt3.y, pnt3.z);
+            pcl::PointXYZ pt2(pnt2.x, pnt2.y, pnt2.z);
+            pcl::PointXYZ pt1(pnt1.x, pnt1.y, pnt1.z);
+
+            Eigen::Vector3f vec12(pt2.x-pt1.x,pt2.y-pt1.y,pt2.z-pt1.z);
+            Eigen::Vector3f vec23(pt3.x-pt2.x,pt3.y-pt2.y,pt3.z-pt2.z);
+            Eigen::Vector3f vecNorm = vec12.cross(vec23);
+            vecNorm.normalize();
+
+            double polygon_z = vecNorm[2];
+
+            if(polygon_z > 0.1)
+            {
+                for(vector<uint32_t>::iterator index_it = (*it).vertices.begin(); index_it != (*it).vertices.end(); ++index_it)
+                {
+                    PointXYZRGB& point = (*transformed_mesh_cloud_ptr)[*index_it];
+    //                PointXYZRGB& point_original = (*mesh_cloud_ptr)[*index_it];
+
+                    // Principal points
+                    int u_unscaled = std::round(focal_length * (point.x / point.z) + cx);
+                    int v_unscaled = std::round(focal_length * (point.y / point.z) + cy);
+
+                    float u = static_cast<float>(float(u_unscaled) / depth_image.cols);
+                    float v = static_cast<float>(float(v_unscaled) / depth_image.rows);
+                    // Remember to check that u, v are in the range [0, 1)
+                    if(u<0 || u>=1 || v<0 || v>=1)
+                        continue;
+
+                    /// Correspondent point in the RGB image
+                    int x = int(std::floor(float(rgb_width) * u));
+                    int y = int(std::floor(float(rgb_height) * v));
+
+    //                cout<<rgb_height<<' '<<rgb_width<<' ';
+    //                cout<< y<<' '<< x<< ' ';
+    //                cout<<zbuffer[y][x]<<endl;
+
+//                    PointXYZ pt(point.x, point.y, point.z);
+    //                bool occluded = tm.isPointOccluded(pt, octree_ptr);
+
+//                    cout<<"Occluded: "<<occluded<<endl;
+//                    if(!occluded)
+//                    {
+//                      if((*mesh_cloud_ptr)[*index_it].b == 0 && (*mesh_cloud_ptr)[*index_it].g == 0 && (*mesh_cloud_ptr)[*index_it].r == 0)
+//                       {
+
+                          cv::Vec3b bgrPixel = rgb_image.at<cv::Vec3b>(y, x);
+                          colors[*index_it].push_back(Color(bgrPixel.val[0],bgrPixel.val[1],bgrPixel.val[2]));
+
+//                        (*mesh_cloud_ptr)[*index_it].b = bgrPixel.val[0];
+//                        (*mesh_cloud_ptr)[*index_it].g = bgrPixel.val[1];
+//                        (*mesh_cloud_ptr)[*index_it].r = bgrPixel.val[2];
+//                      }
+
+
+//                    }
+
+    //                if(zbuffer[y][x] == 0 || zbuffer[ y][ x]>point.z)
+    //                {
+    //                    zbuffer[y][x] = point.z;
+    //                    zbuffer_points[y][x] = *index_it;
+
+    //                }
+                }
+            }
+        }
+
+//        for(int rows=0; rows<rgb_image.rows; rows++)
+//            for(int cols=0; cols<rgb_image.cols; cols++)
+//            {
+//                if(zbuffer_points[rows ][cols] != std::numeric_limits<uint32_t>::max ())
+//                {
+//                    cv::Vec3b bgrPixel = rgb_image.at<cv::Vec3b>(rows, cols);
+//                    (*mesh_cloud_ptr)[zbuffer_points[rows ][cols]].b = bgrPixel.val[0];
+//                    (*mesh_cloud_ptr)[zbuffer_points[rows ][cols]].g = bgrPixel.val[1];
+//                    (*mesh_cloud_ptr)[zbuffer_points[rows ][cols]].r = bgrPixel.val[2];
+//                }
+//            }
+
+
+//        for(size_t i = 0; i < rgb_image.rows; ++i)
+//            delete zbuffer[i];
+
+//        delete zbuffer;
+
+//        for(size_t i = 0; i < rgb_image.rows; ++i)
+//            delete zbuffer_points[i];
+
+//        delete zbuffer_points;
+
+
+//        for(pcl::PointCloud<pcl::PointXYZRGB>::iterator it = mesh_cloud_ptr->begin(); it!= mesh_cloud_ptr->end(); it++)
+//        {
+//            cout << static_cast<int>(it->r) << ", " << static_cast<int>(it->g) << ", " << static_cast<int>(it->b) << endl;
+//        }
+//        cin.ignore(cin.rdbuf()->in_avail()+1);
+    }
+
+
+    for(int ind=0; ind<colors.size(); ++ind)
+    {
+        if(!colors[ind].empty())
+        {
+            //LAST OVERTAKING
+//            Color color = colors[ind][colors[ind].size()-1];
+
+            //AVERAGE
+
+//            Color color;
+//            for(int c_ind=0; c_ind<colors[ind].size(); ++c_ind)
+//            {
+//                color.b += colors[ind][c_ind].b;
+//                color.g += colors[ind][c_ind].g;
+//                color.r += colors[ind][c_ind].r;
+//            }
+
+//            color.b /= colors[ind].size();
+//            color.g /= colors[ind].size();
+//            color.r /= colors[ind].size();
+
+            //INTENSITY MEDIAN
+
+            sort(colors[ind].begin(), colors[ind].end(),
+                [](const Color & a, const Color & b) -> bool
+            {
+                return a.b+a.g+a.r > b.b+b.g+b.r;
+            });
+
+            colors[ind].pop_back();
+//            colors[ind].erase(colors[ind].begin());
+
+            Color color;
+            size_t size = colors[ind].size();
+
+            if (size  % 2 == 0)
+            {
+                color.b = (colors[ind][size / 2 - 1].b + colors[ind][size / 2].b) / 2;
+                color.g = (colors[ind][size / 2 - 1].g + colors[ind][size / 2].g) / 2;
+                color.r = (colors[ind][size / 2 - 1].r + colors[ind][size / 2].r) / 2;
+            }
+            else
+            {
+                color = colors[ind][size / 2];
+            }
+
+//            vector<int> intensities;
+//            for(int c_ind=0; c_ind<colors.b.size(); ++c_ind)
+//            {
+//                intensities.push_back((colors.b[c_ind]+colors.g[c_ind]+colors.r[c_ind])/3);
+//            }
+
+//            int b = colors[ind].b[colors[ind].b.size()-1];
+//            int g = colors[ind].g[colors[ind].g.size()-1];
+//            int r = colors[ind].r[colors[ind].r.size()-1];
+
+
+
+            (*mesh_cloud_ptr)[ind].b = color.b;
+            (*mesh_cloud_ptr)[ind].g = color.g;
+            (*mesh_cloud_ptr)[ind].r = color.r;
+        }
+    }
+
+
 
     std::cout << "Finished texturing" << std::endl;
 
 
+
+//    pcl::visualization::CloudViewer pc_viewer ("Simple Cloud Viewer");
+
+//    pc_viewer.showCloud (mesh_cloud_ptr);
+//    pc_viewer.runOnVisualizationThreadOnce (viewerOneOff);
+//    while (!pc_viewer.wasStopped ())
+//    {
+//    }
+
+    pcl::toPCLPointCloud2(*mesh_cloud_ptr, mesh.cloud);
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("3D Viewer"));
     viewer->setBackgroundColor(1, 1, 1);
     viewer->addPolygonMesh(mesh, "meshes", 0);
@@ -221,6 +456,25 @@ int main(int argc, char *argv[]) {
 }
 
 //SCRAP CODE
+
+
+/* TEXTURING:
+ *
+    cv::Size size = depth_image.size();
+    int depth_width  = size.width;
+    int depth_height  = size.height;
+
+
+    int cx = depth_width / 2;
+    int cy = depth_height / 2;
+
+    cout<<cx<<' '<<cy<<endl;
+//        int u_unscaled = std::round(focal_length * (point.x / point.z) + cx);
+//        int v_unscaled = std::round(focal_length * (point.y / point.z) + cy);
+
+//        float u = static_cast<float>(u_unscaled / sizeX);
+//        float v = static_cast<float>(v_unscaled / sizeY);
+*/
 
 //CHECK FOR NANS
 
