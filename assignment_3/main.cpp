@@ -28,6 +28,8 @@
 #include <pcl/surface/poisson.h>
 #include <pcl/PolygonMesh.h>
 #include <pcl/surface/texture_mapping.h>
+#include <pcl/io/vtk_lib_io.h>
+#include <pcl/console/parse.h>
 
 #include <eigen3/Eigen/Core>
 
@@ -121,12 +123,15 @@ pcl::PointCloud<pcl::PointNormal> build_full_cloud(Frame3D frames[])
     return filtered_cloud_normals;
 }
 
-PolygonMesh reconstruct(pcl::PointCloud<pcl::PointNormal>::Ptr xyz_cloud, int depth)
+PolygonMesh reconstruct(pcl::PointCloud<pcl::PointNormal>::Ptr xyz_cloud)
 {
     PolygonMesh mesh;
 
     Poisson<PointNormal> poisson;
-    poisson.setDepth(depth);
+    poisson.setDepth(8);
+//    poisson.setIsoDivide(8);
+    poisson.setSamplesPerNode (16);
+
     poisson.setInputCloud(xyz_cloud);
     poisson.reconstruct(mesh);
     return mesh;
@@ -163,6 +168,7 @@ int main(int argc, char *argv[]) {
     if (argc != 2)
         return 0;
 
+
     Frame3D frames[8];
     
     for (int i = 0; i < 8; ++i) {
@@ -173,7 +179,21 @@ int main(int argc, char *argv[]) {
     PointCloud<PointNormal>::Ptr xyz_cloud(&full_cloud);
 
 //POISSON SURFACE RECONSTRUCTION
-    PolygonMesh mesh = reconstruct(xyz_cloud, 10);
+    PolygonMesh mesh = reconstruct(xyz_cloud);
+
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer1(new pcl::visualization::PCLVisualizer("3D Viewer"));
+    viewer1->setBackgroundColor(1, 1, 1);
+    viewer1->addPolygonMesh(mesh, "meshes", 0);
+
+    viewer1->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_SHADING,
+                                        pcl::visualization::PCL_VISUALIZER_SHADING_PHONG, "meshes");
+    viewer1->addCoordinateSystem(1.0);
+    viewer1->initCameraParameters();
+
+    while (!viewer1->wasStopped()) {
+     viewer1->spinOnce(100);
+     boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+    }
 
 //COLORING
 
@@ -199,46 +219,12 @@ int main(int argc, char *argv[]) {
         int rgb_height = rgb_image.rows;
 
 
-//        uint32_t ** zbuffer_points = new uint32_t *[rgb_image.rows ];
-
-//        for(size_t i = 0; i < rgb_image.rows; ++i)
-//            zbuffer_points[i] = new uint32_t [rgb_image.cols];
-
-//        for(int rows=0; rows<rgb_image.rows; rows++)
-//            for(int cols=0; cols<rgb_image.cols; cols++)
-//            {
-//                zbuffer_points[rows ][cols] = std::numeric_limits<uint32_t>::max ();
-//            }
-
-
-
-//        double** zbuffer = new double*[rgb_image.rows ];
-
-//        for(size_t i = 0; i < rgb_image.rows; ++i)
-//            zbuffer[i] = new double[rgb_image.cols];
-
-//        for(int rows=0; rows<rgb_image.rows; rows++)
-//            for(int cols=0; cols<rgb_image.cols; cols++)
-//            {
-//                zbuffer[rows ][cols] = 0;
-//            }
 
 
         double focal_length = frames[i].focal_length_;
         const Eigen::Matrix4f& camera_pose = frames[i].getEigenTransform().inverse();
         PointCloud<PointXYZRGB>::Ptr transformed_mesh_cloud_ptr =  transformPointCloud(mesh_cloud_ptr,  camera_pose);
-//  FOR ISPOINTOCCLUDED
-//        PointCloud<PointXYZ> transformed_mesh_cloud_xyz;
-//        PointCloud<PointXYZ>::Ptr transformed_mesh_cloud_xyz_ptr(&transformed_mesh_cloud_xyz);
-//        pcl::copyPointCloud (*transformed_mesh_cloud_ptr, transformed_mesh_cloud_xyz);
 
-//        float resolution = 128.0f;
-//        pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> octree (resolution);
-
-//        octree.setInputCloud(transformed_mesh_cloud_xyz_ptr);
-//        octree.addPointsFromInputCloud();
-//        pcl::TextureMapping< PointXYZ >::OctreePtr octree_ptr(&octree);
-//        pcl::TextureMapping<pcl::PointXYZ> tm;
         for(std::vector<pcl::Vertices>::iterator it = polygons.begin(); it != polygons.end(); ++it)
         {
             PointXYZRGB& pnt3 = (*transformed_mesh_cloud_ptr)[(*it).vertices[0]];
@@ -256,12 +242,11 @@ int main(int argc, char *argv[]) {
 
             double polygon_z = vecNorm[2];
 
-            if(polygon_z > 0.1)
+            if(polygon_z > 0.3)
             {
                 for(vector<uint32_t>::iterator index_it = (*it).vertices.begin(); index_it != (*it).vertices.end(); ++index_it)
                 {
                     PointXYZRGB& point = (*transformed_mesh_cloud_ptr)[*index_it];
-    //                PointXYZRGB& point_original = (*mesh_cloud_ptr)[*index_it];
 
                     // Principal points
                     int u_unscaled = std::round(focal_length * (point.x / point.z) + cx);
@@ -277,69 +262,13 @@ int main(int argc, char *argv[]) {
                     int x = int(std::floor(float(rgb_width) * u));
                     int y = int(std::floor(float(rgb_height) * v));
 
-    //                cout<<rgb_height<<' '<<rgb_width<<' ';
-    //                cout<< y<<' '<< x<< ' ';
-    //                cout<<zbuffer[y][x]<<endl;
+                  cv::Vec3b bgrPixel = rgb_image.at<cv::Vec3b>(y, x);
+                  colors[*index_it].push_back(Color(bgrPixel.val[0],bgrPixel.val[1],bgrPixel.val[2]));
 
-//                    PointXYZ pt(point.x, point.y, point.z);
-    //                bool occluded = tm.isPointOccluded(pt, octree_ptr);
-
-//                    cout<<"Occluded: "<<occluded<<endl;
-//                    if(!occluded)
-//                    {
-//                      if((*mesh_cloud_ptr)[*index_it].b == 0 && (*mesh_cloud_ptr)[*index_it].g == 0 && (*mesh_cloud_ptr)[*index_it].r == 0)
-//                       {
-
-                          cv::Vec3b bgrPixel = rgb_image.at<cv::Vec3b>(y, x);
-                          colors[*index_it].push_back(Color(bgrPixel.val[0],bgrPixel.val[1],bgrPixel.val[2]));
-
-//                        (*mesh_cloud_ptr)[*index_it].b = bgrPixel.val[0];
-//                        (*mesh_cloud_ptr)[*index_it].g = bgrPixel.val[1];
-//                        (*mesh_cloud_ptr)[*index_it].r = bgrPixel.val[2];
-//                      }
-
-
-//                    }
-
-    //                if(zbuffer[y][x] == 0 || zbuffer[ y][ x]>point.z)
-    //                {
-    //                    zbuffer[y][x] = point.z;
-    //                    zbuffer_points[y][x] = *index_it;
-
-    //                }
                 }
             }
         }
 
-//        for(int rows=0; rows<rgb_image.rows; rows++)
-//            for(int cols=0; cols<rgb_image.cols; cols++)
-//            {
-//                if(zbuffer_points[rows ][cols] != std::numeric_limits<uint32_t>::max ())
-//                {
-//                    cv::Vec3b bgrPixel = rgb_image.at<cv::Vec3b>(rows, cols);
-//                    (*mesh_cloud_ptr)[zbuffer_points[rows ][cols]].b = bgrPixel.val[0];
-//                    (*mesh_cloud_ptr)[zbuffer_points[rows ][cols]].g = bgrPixel.val[1];
-//                    (*mesh_cloud_ptr)[zbuffer_points[rows ][cols]].r = bgrPixel.val[2];
-//                }
-//            }
-
-
-//        for(size_t i = 0; i < rgb_image.rows; ++i)
-//            delete zbuffer[i];
-
-//        delete zbuffer;
-
-//        for(size_t i = 0; i < rgb_image.rows; ++i)
-//            delete zbuffer_points[i];
-
-//        delete zbuffer_points;
-
-
-//        for(pcl::PointCloud<pcl::PointXYZRGB>::iterator it = mesh_cloud_ptr->begin(); it!= mesh_cloud_ptr->end(); it++)
-//        {
-//            cout << static_cast<int>(it->r) << ", " << static_cast<int>(it->g) << ", " << static_cast<int>(it->b) << endl;
-//        }
-//        cin.ignore(cin.rdbuf()->in_avail()+1);
     }
 
 
@@ -352,19 +281,6 @@ int main(int argc, char *argv[]) {
 
             //AVERAGE
 
-//            Color color;
-//            for(int c_ind=0; c_ind<colors[ind].size(); ++c_ind)
-//            {
-//                color.b += colors[ind][c_ind].b;
-//                color.g += colors[ind][c_ind].g;
-//                color.r += colors[ind][c_ind].r;
-//            }
-
-//            color.b /= colors[ind].size();
-//            color.g /= colors[ind].size();
-//            color.r /= colors[ind].size();
-
-            //INTENSITY MEDIAN
 
             sort(colors[ind].begin(), colors[ind].end(),
                 [](const Color & a, const Color & b) -> bool
@@ -372,14 +288,33 @@ int main(int argc, char *argv[]) {
                 return a.b+a.g+a.r > b.b+b.g+b.r;
             });
 
-            colors[ind].pop_back();
-//            colors[ind].erase(colors[ind].begin());
+
+            if(colors[ind].size()>1)
+                colors[ind].erase(colors[ind].begin());
+
+            Color averageColor;
+            for(int c_ind=0; c_ind<colors[ind].size(); ++c_ind)
+            {
+                averageColor.b += colors[ind][c_ind].b;
+                averageColor.g += colors[ind][c_ind].g;
+                averageColor.r += colors[ind][c_ind].r;
+            }
+
+            averageColor.b /= colors[ind].size();
+            averageColor.g /= colors[ind].size();
+            averageColor.r /= colors[ind].size();
+
+//            Color color = averageColor;
+
+            //INTENSITY MEDIAN
+
 
             Color color;
             size_t size = colors[ind].size();
 
             if (size  % 2 == 0)
             {
+//                color = colors[ind][size / 2];
                 color.b = (colors[ind][size / 2 - 1].b + colors[ind][size / 2].b) / 2;
                 color.g = (colors[ind][size / 2 - 1].g + colors[ind][size / 2].g) / 2;
                 color.r = (colors[ind][size / 2 - 1].r + colors[ind][size / 2].r) / 2;
@@ -389,16 +324,10 @@ int main(int argc, char *argv[]) {
                 color = colors[ind][size / 2];
             }
 
-//            vector<int> intensities;
-//            for(int c_ind=0; c_ind<colors.b.size(); ++c_ind)
-//            {
-//                intensities.push_back((colors.b[c_ind]+colors.g[c_ind]+colors.r[c_ind])/3);
-//            }
 
-//            int b = colors[ind].b[colors[ind].b.size()-1];
-//            int g = colors[ind].g[colors[ind].g.size()-1];
-//            int r = colors[ind].r[colors[ind].r.size()-1];
-
+//            color.b = ((float(color.b) / (color.b+color.g+color.r)) * (averageColor.b+averageColor.g+averageColor.r));
+//            color.g = ((float(color.g) / (color.b+color.g+color.r)) * (averageColor.b+averageColor.g+averageColor.r));
+//            color.r = ((float(color.r) / (color.b+color.g+color.r)) * (averageColor.b+averageColor.g+averageColor.r));
 
 
             (*mesh_cloud_ptr)[ind].b = color.b;
@@ -425,6 +354,9 @@ int main(int argc, char *argv[]) {
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("3D Viewer"));
     viewer->setBackgroundColor(1, 1, 1);
     viewer->addPolygonMesh(mesh, "meshes", 0);
+
+    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_SHADING,
+                                        pcl::visualization::PCL_VISUALIZER_SHADING_PHONG, "meshes");
     viewer->addCoordinateSystem(1.0);
     viewer->initCameraParameters();
 
@@ -433,24 +365,6 @@ int main(int argc, char *argv[]) {
      boost::this_thread::sleep(boost::posix_time::microseconds(100000));
     }
 
-
-    /*
-     * To visualize pcl::PolygonMesh at the end you can use PCLVisualizer as following:
-     * 
-     * ```
-     * pcl::PolygonMesh triangles;
-     *
-     * boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("3D Viewer"));
-     * viewer->setBackgroundColor(1, 1, 1);
-     * viewer->addPolygonMesh(triangles, "meshes", 0);
-     * viewer->addCoordinateSystem(1.0);
-     * viewer->initCameraParameters();
-     * 
-     * while (!viewer->wasStopped()) {
-     *  viewer->spinOnce(100);
-     *  boost::this_thread::sleep(boost::posix_time::microseconds(100000));
-     * }
-     */
 
     return 0;
 }
